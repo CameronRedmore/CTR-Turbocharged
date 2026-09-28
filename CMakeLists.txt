@@ -154,7 +154,7 @@ if(EMSCRIPTEN)
         "--shell-file"
         "${CMAKE_SOURCE_DIR}/web/shell.html"
         "--preload-file"
-        "${CMAKE_SOURCE_DIR}/assets/vita.png@/assets/vita.png"
+        "${CMAKE_SOURCE_DIR}/assets/dualshock.png@/assets/dualshock.png"
         "-sUSE_WEBGL2=1"
         "-sMIN_WEBGL_VERSION=2"
         "-sMAX_WEBGL_VERSION=2"
@@ -169,6 +169,14 @@ if(EMSCRIPTEN)
         "-sEXIT_RUNTIME=0"
         "-sEXPORTED_RUNTIME_METHODS=['FS','callMain']"
         "-lidbfs.js"
+    )
+else()
+    add_custom_command(TARGET ctr_native POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:ctr_native>/assets"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/assets/dualshock.png"
+            "$<TARGET_FILE_DIR:ctr_native>/assets/dualshock.png"
+        VERBATIM
     )
 endif()
 if(WIN32)

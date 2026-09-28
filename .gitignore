@@ -3,6 +3,7 @@ build-*/
 dist/
 assets/*
 !assets/vita.png
+!assets/dualshock.png
 debug/
 *.exe
 !xdelta3.exe

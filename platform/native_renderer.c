@@ -287,11 +287,13 @@ global_variable struct NativeRenderTarget s_offscreenRenderTarget;
 global_variable TextureID s_whiteTexture = (TextureID)-1;
 global_variable TextureID s_lastBoundTexture = (TextureID)-1;
 
-global_variable TextureID s_ghostReplayVitaTexture;
+global_variable TextureID s_ghostReplayControllerTexture;
 global_variable TextureID s_ghostReplayHighlightTexture;
+#ifdef __vita__
 global_variable TextureID s_ghostReplayShoulderTexture[2];
-global_variable int s_ghostReplayVitaWidth;
-global_variable int s_ghostReplayVitaHeight;
+#endif
+global_variable int s_ghostReplayControllerWidth;
+global_variable int s_ghostReplayControllerHeight;
 global_variable b32 s_ghostReplayOverlayLoadAttempted;
 
 TextureID NativeRenderer_GetVRAMTexture(void)
@@ -532,10 +534,12 @@ void NativeRenderer_Shutdown(void)
 
 	NativeRenderer_DestroyTexture(s_whiteTexture);
 	NativeRenderer_DestroyTexture(s_rgLutTexture);
-	NativeRenderer_DestroyTexture(s_ghostReplayVitaTexture);
+	NativeRenderer_DestroyTexture(s_ghostReplayControllerTexture);
 	NativeRenderer_DestroyTexture(s_ghostReplayHighlightTexture);
+#ifdef __vita__
 	NativeRenderer_DestroyTexture(s_ghostReplayShoulderTexture[0]);
 	NativeRenderer_DestroyTexture(s_ghostReplayShoulderTexture[1]);
+#endif
 #ifdef __vita__
 	for (int cacheIndex = 0; cacheIndex < NATIVE_P4_CACHE_CAPACITY; cacheIndex++)
 	{
@@ -3549,12 +3553,18 @@ internal b32 NativeRenderer_LoadGhostReplayOverlay(void)
 {
 	u8 *pixels = NULL;
 	u8 highlight[32 * 32 * 4];
+#ifdef __vita__
 	u8 shoulder[2][48 * 16 * 4];
+#endif
 
 	if (s_ghostReplayOverlayLoadAttempted)
 	{
-		return (s_ghostReplayVitaTexture != 0) && (s_ghostReplayHighlightTexture != 0) &&
+	#ifdef __vita__
+		return (s_ghostReplayControllerTexture != 0) && (s_ghostReplayHighlightTexture != 0) &&
 		       (s_ghostReplayShoulderTexture[0] != 0) && (s_ghostReplayShoulderTexture[1] != 0);
+	#else
+		return (s_ghostReplayControllerTexture != 0) && (s_ghostReplayHighlightTexture != 0);
+	#endif
 	}
 	s_ghostReplayOverlayLoadAttempted = true;
 
@@ -3577,29 +3587,29 @@ internal b32 NativeRenderer_LoadGhostReplayOverlay(void)
 		NATIVE_RENDERER_ERROR("%s\n", "Failed to decode app0:/vita.png for Ghost Replay overlay");
 		return false;
 	}
-	s_ghostReplayVitaWidth = (int)image.width;
-	s_ghostReplayVitaHeight = (int)image.height;
+	s_ghostReplayControllerWidth = (int)image.width;
+	s_ghostReplayControllerHeight = (int)image.height;
 #else
 	struct NativeAssetsByteBuffer overlayBytes = {0};
 	int imageWidth = 0;
 	int imageHeight = 0;
 	int imageChannels = 0;
-	if (!NativeAssets_ReadBytes("vita.png", NATIVE_ASSET_READ_DATA_FILE, &overlayBytes))
+	if (!NativeAssets_ReadBytes("dualshock.png", NATIVE_ASSET_READ_DATA_FILE, &overlayBytes))
 	{
-		NATIVE_RENDERER_ERROR("%s\n", "Failed to load assets/vita.png for Ghost Replay overlay");
+		NATIVE_RENDERER_ERROR("%s\n", "Failed to load assets/dualshock.png for Ghost Replay overlay");
 		return false;
 	}
 	pixels = (u8 *)stbi_load_from_memory(overlayBytes.data, overlayBytes.size, &imageWidth, &imageHeight, &imageChannels, 4);
 	NativeAssets_FreeBytes(&overlayBytes);
 	if (pixels == NULL)
 	{
-		NATIVE_RENDERER_ERROR("%s\n", "Failed to decode assets/vita.png for Ghost Replay overlay");
+		NATIVE_RENDERER_ERROR("%s\n", "Failed to decode assets/dualshock.png for Ghost Replay overlay");
 		return false;
 	}
-	s_ghostReplayVitaWidth = imageWidth;
-	s_ghostReplayVitaHeight = imageHeight;
+	s_ghostReplayControllerWidth = imageWidth;
+	s_ghostReplayControllerHeight = imageHeight;
 #endif
-	s_ghostReplayVitaTexture = NativeRenderer_CreateGhostReplayTexture(s_ghostReplayVitaWidth, s_ghostReplayVitaHeight, pixels);
+	s_ghostReplayControllerTexture = NativeRenderer_CreateGhostReplayTexture(s_ghostReplayControllerWidth, s_ghostReplayControllerHeight, pixels);
 
 	for (int y = 0; y < 32; y++)
 	{
@@ -3617,6 +3627,7 @@ internal b32 NativeRenderer_LoadGhostReplayOverlay(void)
 	}
 	s_ghostReplayHighlightTexture = NativeRenderer_CreateGhostReplayTexture(32, 32, highlight);
 
+#ifdef __vita__
 	const int shoulderImageX[2] = {16, 237};
 	for (int side = 0; side < 2; side++)
 	{
@@ -3625,7 +3636,7 @@ internal b32 NativeRenderer_LoadGhostReplayOverlay(void)
 			for (int x = 0; x < 48; x++)
 			{
 				const int sourceX = shoulderImageX[side] + x;
-				const int sourcePixel = (y * s_ghostReplayVitaWidth + sourceX) * 4;
+				const int sourcePixel = (y * s_ghostReplayControllerWidth + sourceX) * 4;
 				const int dstPixel = (y * 48 + x) * 4;
 				const u8 sourceAlpha = pixels[sourcePixel + 3];
 				const int luminance = ((int)pixels[sourcePixel + 0] + (int)pixels[sourcePixel + 1] + (int)pixels[sourcePixel + 2]) / 3;
@@ -3639,6 +3650,7 @@ internal b32 NativeRenderer_LoadGhostReplayOverlay(void)
 		}
 		s_ghostReplayShoulderTexture[side] = NativeRenderer_CreateGhostReplayTexture(48, 16, shoulder[side]);
 	}
+#endif
 
 #ifdef __vita__
 	free(pixels);
@@ -3647,8 +3659,12 @@ internal b32 NativeRenderer_LoadGhostReplayOverlay(void)
 	stbi_image_free(pixels);
 #endif
 
-	return (s_ghostReplayVitaTexture != 0) && (s_ghostReplayHighlightTexture != 0) &&
+#ifdef __vita__
+	return (s_ghostReplayControllerTexture != 0) && (s_ghostReplayHighlightTexture != 0) &&
 	       (s_ghostReplayShoulderTexture[0] != 0) && (s_ghostReplayShoulderTexture[1] != 0);
+#else
+	return (s_ghostReplayControllerTexture != 0) && (s_ghostReplayHighlightTexture != 0);
+#endif
 }
 
 internal void NativeRenderer_DrawGhostReplayQuad(TextureID texture, int x, int y, int width, int height)
@@ -3676,22 +3692,24 @@ internal void NativeRenderer_DrawGhostReplayQuad(TextureID texture, int x, int y
 internal void NativeRenderer_DrawGhostReplayHighlight(int overlayX, int overlayY, int overlayW, int overlayH,
 	                                                   int imageX, int imageY, int width, int height)
 {
-	const int centerX = overlayX + (imageX * overlayW) / s_ghostReplayVitaWidth;
-	const int centerY = overlayY + overlayH - (imageY * overlayH) / s_ghostReplayVitaHeight;
-	const int scaledW = (width * overlayW) / s_ghostReplayVitaWidth;
-	const int scaledH = (height * overlayH) / s_ghostReplayVitaHeight;
+	const int centerX = overlayX + (imageX * overlayW) / s_ghostReplayControllerWidth;
+	const int centerY = overlayY + overlayH - (imageY * overlayH) / s_ghostReplayControllerHeight;
+	const int scaledW = (width * overlayW) / s_ghostReplayControllerWidth;
+	const int scaledH = (height * overlayH) / s_ghostReplayControllerHeight;
 	NativeRenderer_DrawGhostReplayQuad(s_ghostReplayHighlightTexture, centerX - scaledW / 2, centerY - scaledH / 2, scaledW, scaledH);
 }
 
+#ifdef __vita__
 internal void NativeRenderer_DrawGhostReplayImageRegion(TextureID texture, int overlayX, int overlayY, int overlayW, int overlayH,
 	                                                     int imageX, int imageY, int imageW, int imageH)
 {
-	const int x = overlayX + (imageX * overlayW) / s_ghostReplayVitaWidth;
-	const int y = overlayY + overlayH - ((imageY + imageH) * overlayH) / s_ghostReplayVitaHeight;
-	const int width = (imageW * overlayW) / s_ghostReplayVitaWidth;
-	const int height = (imageH * overlayH) / s_ghostReplayVitaHeight;
+	const int x = overlayX + (imageX * overlayW) / s_ghostReplayControllerWidth;
+	const int y = overlayY + overlayH - ((imageY + imageH) * overlayH) / s_ghostReplayControllerHeight;
+	const int width = (imageW * overlayW) / s_ghostReplayControllerWidth;
+	const int height = (imageH * overlayH) / s_ghostReplayControllerHeight;
 	NativeRenderer_DrawGhostReplayQuad(texture, x, y, width, height);
 }
+#endif
 
 void NativeRenderer_DrawGhostReplayOverlay(void)
 {
@@ -3706,8 +3724,12 @@ void NativeRenderer_DrawGhostReplayOverlay(void)
 		return;
 	}
 
+#ifdef __vita__
 	const int overlayW = (s_presentViewport.w * 23) / 100;
-	const int overlayH = (overlayW * s_ghostReplayVitaHeight) / s_ghostReplayVitaWidth;
+#else
+	const int overlayW = (s_presentViewport.w * 25) / 100;
+#endif
+	const int overlayH = (overlayW * s_ghostReplayControllerHeight) / s_ghostReplayControllerWidth;
 	const int overlayX = s_presentViewport.x + 14;
 	const int overlayY = s_presentViewport.y + 12;
 	const GLboolean previousStencilEnabled = glIsEnabled(GL_STENCIL_TEST);
@@ -3720,7 +3742,7 @@ void NativeRenderer_DrawGhostReplayOverlay(void)
 #else
 	// Ghost Replay is modern RGBA UI, not a PS1 semi-transparency primitive.
 	// BM_AVERAGE on desktop deliberately uses a constant 0.5 alpha to emulate
-	// the PS1 ABR mode, which darkens/tints the entire Vita overlay. Keep the
+	// the PS1 ABR mode, which darkens/tints the entire controller overlay. Keep the
 	// renderer state cache at BM_NONE and use ordinary source-alpha blending.
 	NativeRenderer_SetBlendMode(BM_NONE);
 	NativeRenderer_EnableDepth(0);
@@ -3730,8 +3752,9 @@ void NativeRenderer_DrawGhostReplayOverlay(void)
 #endif
 	glDisable(GL_STENCIL_TEST);
 
-	NativeRenderer_DrawGhostReplayQuad(s_ghostReplayVitaTexture, overlayX, overlayY, overlayW, overlayH);
+	NativeRenderer_DrawGhostReplayQuad(s_ghostReplayControllerTexture, overlayX, overlayY, overlayW, overlayH);
 
+#ifdef __vita__
 	if ((buttonsHeld & BTN_UP) != 0)       NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 28, 39, 14, 14);
 	if ((buttonsHeld & BTN_DOWN) != 0)     NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 28, 62, 14, 14);
 	if ((buttonsHeld & BTN_LEFT) != 0)     NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 17, 51, 14, 14);
@@ -3759,6 +3782,38 @@ void NativeRenderer_DrawGhostReplayOverlay(void)
 	NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, rightStickX, rightStickY, 8, 8);
 	if ((buttonsHeld & BTN_L3) != 0) NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, leftStickX - 2, leftStickY - 2, 12, 12);
 	if ((buttonsHeld & BTN_R3) != 0) NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, rightStickX - 2, rightStickY - 2, 12, 12);
+#else
+	// Coordinates below are measured directly in assets/dualshock.png.
+	// NativeRenderer_DrawGhostReplayHighlight takes top-origin image-space Y
+	// coordinates and converts them to the OpenGL bottom-origin viewport.
+	if ((buttonsHeld & BTN_UP) != 0)       NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 418, 312, 104, 104);
+	if ((buttonsHeld & BTN_DOWN) != 0)     NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 418, 461, 104, 104);
+	if ((buttonsHeld & BTN_LEFT) != 0)     NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 342, 387, 104, 104);
+	if ((buttonsHeld & BTN_RIGHT) != 0)    NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 494, 387, 104, 104);
+	if ((buttonsHeld & BTN_TRIANGLE) != 0) NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 1253, 277, 112, 112);
+	if ((buttonsHeld & BTN_CIRCLE) != 0)   NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 1369, 387, 112, 112);
+	if ((buttonsHeld & BTN_CROSS) != 0)    NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 1253, 500, 112, 112);
+	if ((buttonsHeld & BTN_SQUARE) != 0)   NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 1138, 387, 112, 112);
+
+	// The front-facing asset exposes a single shoulder cap per side. CTR labels
+	// these controls simply as L/R, so both shoulder inputs highlight the same
+	// visible cap instead of a synthetic lower half.
+		if ((buttonsHeld & (BTN_L1 | BTN_L2)) != 0) NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 418, 70, 170, 64);
+		if ((buttonsHeld & (BTN_R1 | BTN_R2)) != 0) NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 1248, 70, 170, 64);
+
+	if ((buttonsHeld & BTN_SELECT) != 0) NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 742, 407, 86, 54);
+	if ((buttonsHeld & BTN_START) != 0)  NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, 929, 408, 88, 58);
+
+	const int stickTravel = 45;
+	const int leftStickX = 623 + (((int)stickLX - 128) * stickTravel) / 127;
+	const int leftStickY = 613 + (((int)stickLY - 128) * stickTravel) / 127;
+	const int rightStickX = 1047 + (((int)stickRX - 128) * stickTravel) / 127;
+	const int rightStickY = 613 + (((int)stickRY - 128) * stickTravel) / 127;
+	NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, leftStickX, leftStickY, 58, 58);
+	NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, rightStickX, rightStickY, 58, 58);
+	if ((buttonsHeld & BTN_L3) != 0) NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, leftStickX, leftStickY, 116, 116);
+	if ((buttonsHeld & BTN_R3) != 0) NativeRenderer_DrawGhostReplayHighlight(overlayX, overlayY, overlayW, overlayH, rightStickX, rightStickY, 116, 116);
+#endif
 
 	if (previousStencilEnabled)
 	{
