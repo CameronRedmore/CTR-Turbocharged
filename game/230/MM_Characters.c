@@ -147,8 +147,10 @@ static s16 s_nativeCharacterSelectStatLengths[3];
 static s16 s_nativeCharacterSelectStatCharacterID = -1;
 #if defined(CTR_NATIVE)
 static s16 s_nativeCharacterSelectPage;
+static s16 s_nativeCharacterSelectPagePerPlayer[MM_CHARACTER_SELECT_MAX_PLAYERS] = {0, 0, 0, 0};
 static s16 s_nativeCharacterSelectIconPerPlayer[MM_CHARACTER_SELECT_MAX_PLAYERS] = {0, 1, 2, 3};
 static s16 s_nativeCharacterSelectPageBackup;
+static s16 s_nativeCharacterSelectPagePerPlayerBackup[MM_CHARACTER_SELECT_MAX_PLAYERS] = {0, 0, 0, 0};
 static s16 s_nativeCharacterSelectIconBackup[MM_CHARACTER_SELECT_MAX_PLAYERS] = {0, 1, 2, 3};
 static s16 s_nativeCharacterSelectCustomBackup[MM_CHARACTER_SELECT_MAX_PLAYERS] = {-1, -1, -1, -1};
 static s16 s_nativeCharacterSelectCurrentCustomPreview[MM_CHARACTER_SELECT_MAX_PLAYERS] = {-1, -1, -1, -1};
@@ -656,7 +658,7 @@ static s32 MM_Characters_NativeDriverWindowTransitionFirst(void)
 	return MM_Characters_NativeCustomRosterEnabled() ? MM_CHARACTER_SELECT_PAGED_DRIVER_WINDOW_TRANSITION_FIRST : MM_CHARACTER_SELECT_DRIVER_WINDOW_TRANSITION_FIRST;
 }
 
-static int MM_Characters_NativeCustomIndexForSlot(int slot)
+static int MM_Characters_NativeCustomIndexForPageAndSlot(int page, int slot)
 {
 	if (!MM_Characters_NativeCustomRosterEnabled())
 		return -1;
@@ -664,7 +666,7 @@ static int MM_Characters_NativeCustomIndexForSlot(int slot)
 	const s32 page0Slots = MM_Characters_NativePage0CustomSlots();
 	const s32 pageSlots = MM_Characters_NativeCustomPageSlots();
 	int index;
-	if (s_nativeCharacterSelectPage == 0)
+	if (page == 0)
 	{
 		if ((page0Slots == 0) || (slot < MM_CHARACTER_SELECT_ICON_COUNT) ||
 		    (slot >= MM_CHARACTER_SELECT_ICON_COUNT + page0Slots))
@@ -675,10 +677,15 @@ static int MM_Characters_NativeCustomIndexForSlot(int slot)
 	{
 		if ((slot < 0) || (slot >= pageSlots))
 			return -1;
-		index = page0Slots + (s_nativeCharacterSelectPage - 1) * pageSlots + slot;
+		index = page0Slots + (page - 1) * pageSlots + slot;
 	}
 
 	return (index >= 0 && index < NativeCustomRacer_GetCount()) ? index : -1;
+}
+
+static int MM_Characters_NativeCustomIndexForSlot(int slot)
+{
+	return MM_Characters_NativeCustomIndexForPageAndSlot(s_nativeCharacterSelectPage, slot);
 }
 
 
@@ -899,7 +906,8 @@ static void MM_Characters_NativeApplySlotToPlayer(s32 playerIndex, s32 slot)
 		return;
 
 	s_nativeCharacterSelectIconPerPlayer[playerIndex] = (s16)slot;
-	const int customIndex = MM_Characters_NativeCustomIndexForSlot(slot);
+	s_nativeCharacterSelectPagePerPlayer[playerIndex] = s_nativeCharacterSelectPage;
+	const int customIndex = MM_Characters_NativeCustomIndexForPageAndSlot(s_nativeCharacterSelectPagePerPlayer[playerIndex], slot);
 	if (customIndex >= 0)
 	{
 		NativeCustomRacer_SetPlayerSelection(playerIndex, customIndex);
@@ -932,6 +940,9 @@ static void MM_Characters_NativeResetSlotsForPage(void)
 	struct GameTracker *gGT = sdata->gGT;
 	for (s32 playerIndex = 0; playerIndex < gGT->numPlyrNextGame; playerIndex++)
 	{
+		if ((sdata->characterSelectFlags & (1U << playerIndex)) != 0)
+			continue;
+
 		s32 slot = MM_Characters_NativeNthAvailableSlot(playerIndex);
 		if (slot < 0)
 			slot = MM_Characters_NativeNthAvailableSlot(0);
@@ -941,9 +952,11 @@ static void MM_Characters_NativeResetSlotsForPage(void)
 	MM_Characters_NativeResetStats();
 }
 
-static b32 MM_Characters_NativeTryChangePage(u32 button)
+static b32 MM_Characters_NativeTryChangePage(s32 playerIndex, u32 button)
 {
-	if (!MM_Characters_NativeCustomRosterEnabled() || (sdata->characterSelectFlags != 0))
+	if (!MM_Characters_NativeCustomRosterEnabled() ||
+	    (playerIndex < 0) || (playerIndex >= sdata->gGT->numPlyrNextGame) ||
+	    ((sdata->characterSelectFlags & (1U << playerIndex)) != 0))
 		return false;
 
 	const s32 pageCount = MM_Characters_NativePageCount();
@@ -966,6 +979,7 @@ static b32 MM_Characters_NativeTryChangePage(u32 button)
 		return false;
 
 	s_nativeCharacterSelectPage = (s16)nextPage;
+	s_nativeCharacterSelectPagePerPlayer[playerIndex] = (s16)nextPage;
 	MM_Characters_NativeBuildPagedMeta();
 	MM_Characters_NativeResetSlotsForPage();
 	OtherFX_Play(0, 1);
@@ -1449,6 +1463,7 @@ void MM_Characters_BackupIDs(void)
 	s_nativeCharacterSelectPageBackup = s_nativeCharacterSelectPage;
 	for (s32 playerIndex = 0; playerIndex < MM_CHARACTER_SELECT_MAX_PLAYERS; playerIndex++)
 	{
+		s_nativeCharacterSelectPagePerPlayerBackup[playerIndex] = s_nativeCharacterSelectPagePerPlayer[playerIndex];
 		s_nativeCharacterSelectIconBackup[playerIndex] = s_nativeCharacterSelectIconPerPlayer[playerIndex];
 		s_nativeCharacterSelectCustomBackup[playerIndex] = (s16)NativeCustomRacer_GetPlayerSelection(playerIndex);
 	}
@@ -1537,6 +1552,7 @@ void MM_Characters_RestoreIDs(void)
 	{
 		for (s32 playerIndex = 0; playerIndex < gGT->numPlyrNextGame; playerIndex++)
 		{
+			s_nativeCharacterSelectPagePerPlayer[playerIndex] = s_nativeCharacterSelectPagePerPlayerBackup[playerIndex];
 			NativeCustomRacer_SetPlayerSelection(playerIndex, s_nativeCharacterSelectCustomBackup[playerIndex]);
 			s_nativeCharacterSelectIconPerPlayer[playerIndex] = s_nativeCharacterSelectIconBackup[playerIndex];
 		}
@@ -1597,9 +1613,10 @@ void MM_Characters_RestoreIDs(void)
 		{
 			const int customIndex = NativeCustomRacer_GetPlayerSelection(playerIndex);
 			if (customIndex >= 0 &&
-			    MM_Characters_NativeCustomIndexForSlot(s_nativeCharacterSelectIconPerPlayer[playerIndex]) == customIndex)
+			    MM_Characters_NativeCustomIndexForPageAndSlot(s_nativeCharacterSelectPagePerPlayer[playerIndex],
+			                                                  s_nativeCharacterSelectIconPerPlayer[playerIndex]) == customIndex)
 			{
-				MM_Characters_NativeApplySlotToPlayer(playerIndex, s_nativeCharacterSelectIconPerPlayer[playerIndex]);
+				data.characterIDs[playerIndex] = (s16)NativeCustomRacer_GetTemplateCharacterID(customIndex);
 			}
 			else
 			{
@@ -1667,11 +1684,14 @@ void MM_Characters_MenuProc(struct RectMenu *unused)
 
 	for (s32 playerIndex = 0; playerIndex < MM_CHARACTER_SELECT_MAX_PLAYERS; playerIndex++)
 	{
-	#if defined(CTR_NATIVE)
-		if (MM_Characters_NativeCustomRosterEnabled() && (playerIndex < gGT->numPlyrNextGame))
-			iconPerPlayer[playerIndex] = s_nativeCharacterSelectIconPerPlayer[playerIndex];
-		else
-	#endif
+		#if defined(CTR_NATIVE)
+			if (MM_Characters_NativeCustomRosterEnabled() && (playerIndex < gGT->numPlyrNextGame))
+				iconPerPlayer[playerIndex] =
+					(s_nativeCharacterSelectPagePerPlayer[playerIndex] == s_nativeCharacterSelectPage)
+						? s_nativeCharacterSelectIconPerPlayer[playerIndex]
+						: -1;
+			else
+		#endif
 		iconPerPlayer[playerIndex] = D230.characterMenuID[data.characterIDs[playerIndex]];
 	}
 
@@ -1683,13 +1703,26 @@ void MM_Characters_MenuProc(struct RectMenu *unused)
 
 	MM_Characters_SetMenuLayout();
 
-#if defined(CTR_NATIVE)
-	if ((D230.characterSelectMenuState == IN_MENU) && MM_Characters_NativeTryChangePage(sdata->buttonTapPerPlayer[0]))
-	{
-		for (s32 playerIndex = 0; playerIndex < gGT->numPlyrNextGame; playerIndex++)
-			iconPerPlayer[playerIndex] = s_nativeCharacterSelectIconPerPlayer[playerIndex];
-	}
-#endif
+	#if defined(CTR_NATIVE)
+		if (D230.characterSelectMenuState == IN_MENU)
+		{
+			for (s32 pagePlayer = 0; pagePlayer < gGT->numPlyrNextGame; pagePlayer++)
+			{
+				if (!MM_Characters_NativeTryChangePage(pagePlayer, sdata->buttonTapPerPlayer[pagePlayer]))
+					continue;
+
+				for (s32 playerIndex = 0; playerIndex < gGT->numPlyrNextGame; playerIndex++)
+				{
+					iconPerPlayer[playerIndex] =
+						(s_nativeCharacterSelectPagePerPlayer[playerIndex] == s_nativeCharacterSelectPage)
+							? s_nativeCharacterSelectIconPerPlayer[playerIndex]
+							: -1;
+				}
+				sdata->buttonTapPerPlayer[pagePlayer] = 0;
+				break;
+			}
+		}
+	#endif
 	MM_Characters_DrawWindows(1);
 
 	// if transitioning in
@@ -1825,16 +1858,57 @@ dontDrawSelectCharacter:
 
 	for (s32 playerIndex = 0; playerIndex < gGT->numPlyrNextGame; playerIndex++)
 	{
-		u16 playerSelectFlag = (u16)(1 << playerIndex);
-		s16 currentIcon = iconPerPlayer[playerIndex];
-		s16 candidateIcon = currentIcon;
-		b32 playerSelectedBeforeInput = (((int)(s16)sdata->characterSelectFlags >> playerIndex) & 1U) != 0;
+			u16 playerSelectFlag = (u16)(1 << playerIndex);
+			s16 currentIcon = iconPerPlayer[playerIndex];
+			s16 candidateIcon = currentIcon;
+			b32 playerSelectedBeforeInput = (((int)(s16)sdata->characterSelectFlags >> playerIndex) & 1U) != 0;
+			u32 button = sdata->buttonTapPerPlayer[playerIndex];
 
-		Color playerColor;
-		MM_Characters_AnimateColors((u8 *)&playerColor, playerIndex, (int)(s16)(sdata->characterSelectFlags & playerSelectFlag));
+		#if defined(CTR_NATIVE)
+			if (MM_Characters_NativeCustomRosterEnabled() && (currentIcon < 0))
+			{
+				if (playerSelectedBeforeInput &&
+				    (D230.characterSelectMenuState == IN_MENU) &&
+				    ((button & MM_CHARACTER_SELECT_INPUT_BACK) != 0))
+				{
+					OtherFX_Play(2, 1);
+					sdata->characterSelectFlags &= ~playerSelectFlag;
+					playerSelectedBeforeInput = false;
 
-		struct CharacterSelectMeta *preInputCharacterMeta = &D230.activeCharacterSelectMeta[currentIcon];
-		u32 button = sdata->buttonTapPerPlayer[playerIndex];
+					s32 slot = MM_Characters_NativeNthAvailableSlot(playerIndex);
+					if ((slot >= 0) && MM_Characters_boolIsInvalid(iconPerPlayer, (s16)slot, (s16)playerIndex))
+					{
+						for (slot = 0; slot < MM_CHARACTER_SELECT_PAGED_ICON_COUNT; slot++)
+						{
+							if (MM_Characters_NativeSlotAvailable(slot) &&
+							    !MM_Characters_boolIsInvalid(iconPerPlayer, (s16)slot, (s16)playerIndex))
+								break;
+						}
+						if (slot >= MM_CHARACTER_SELECT_PAGED_ICON_COUNT)
+							slot = -1;
+					}
+
+					if (slot >= 0)
+					{
+						MM_Characters_NativeApplySlotToPlayer(playerIndex, slot);
+						iconPerPlayer[playerIndex] = (s16)slot;
+						currentIcon = (s16)slot;
+						candidateIcon = (s16)slot;
+					}
+				}
+
+				if (currentIcon < 0)
+				{
+					sdata->buttonTapPerPlayer[playerIndex] = 0;
+					continue;
+				}
+			}
+		#endif
+
+			Color playerColor;
+			MM_Characters_AnimateColors((u8 *)&playerColor, playerIndex, (int)(s16)(sdata->characterSelectFlags & playerSelectFlag));
+
+			struct CharacterSelectMeta *preInputCharacterMeta = &D230.activeCharacterSelectMeta[currentIcon];
 
 		if ((D230.characterSelectMenuState == IN_MENU) &&
 		    // If you press the D-Pad, or Cross, Square, Triangle, Circle
@@ -2155,11 +2229,14 @@ dontDrawSelectCharacter:
 	struct CharacterSelectMeta *activeCharacterSelectMeta = D230.activeCharacterSelectMeta;
 
 #if defined(CTR_NATIVE)
-	if (MM_Characters_NativeCustomRosterEnabled())
-	{
-		for (s32 playerIndex = 0; playerIndex < gGT->numPlyrNextGame; playerIndex++)
-			MM_Characters_NativeApplySlotToPlayer(playerIndex, iconPerPlayer[playerIndex]);
-	}
+		if (MM_Characters_NativeCustomRosterEnabled())
+		{
+			for (s32 playerIndex = 0; playerIndex < gGT->numPlyrNextGame; playerIndex++)
+			{
+				if (iconPerPlayer[playerIndex] >= 0)
+					MM_Characters_NativeApplySlotToPlayer(playerIndex, iconPerPlayer[playerIndex]);
+			}
+		}
 	else
 #endif
 	{
@@ -2170,14 +2247,15 @@ dontDrawSelectCharacter:
 	MM_Characters_NativeDrawStats();
 	MM_Characters_NativeDrawPageHints();
 
-	for (s32 playerIndex = 0; playerIndex < gGT->numPlyrNextGame; playerIndex++)
-	{
-		s16 playerIcon = iconPerPlayer[playerIndex];
-		activeCharacterSelectMeta = &D230.activeCharacterSelectMeta[playerIcon];
-		b32 playerSelected = (((int)(s16)sdata->characterSelectFlags >> playerIndex) & 1U) != 0;
+		for (s32 playerIndex = 0; playerIndex < gGT->numPlyrNextGame; playerIndex++)
+		{
+			s16 playerIcon = iconPerPlayer[playerIndex];
+			struct CharacterSelectMeta *playerCharacterMeta =
+				(playerIcon >= 0) ? &D230.activeCharacterSelectMeta[playerIcon] : NULL;
+			b32 playerSelected = (((int)(s16)sdata->characterSelectFlags >> playerIndex) & 1U) != 0;
 
 		// if player has not selected a character
-		if (!playerSelected)
+			if (!playerSelected && (playerCharacterMeta != NULL))
 		{
 			Color animatedColor;
 			u16 selectedPlayerFlag = (u16)(1 << playerIndex);
@@ -2192,8 +2270,8 @@ dontDrawSelectCharacter:
 
 			struct TransitionMeta *selectedIconTransition = &D230.characterSelectTransitionMeta[playerIcon];
 
-			drawRect.x = selectedIconTransition->currX + activeCharacterSelectMeta->posX + MM_CHARACTER_SELECT_HIGHLIGHT_OFFSET_X;
-			drawRect.y = selectedIconTransition->currY + activeCharacterSelectMeta->posY + MM_CHARACTER_SELECT_HIGHLIGHT_OFFSET_Y;
+				drawRect.x = selectedIconTransition->currX + playerCharacterMeta->posX + MM_CHARACTER_SELECT_HIGHLIGHT_OFFSET_X;
+				drawRect.y = selectedIconTransition->currY + playerCharacterMeta->posY + MM_CHARACTER_SELECT_HIGHLIGHT_OFFSET_Y;
 			drawRect.w = MM_CHARACTER_SELECT_HIGHLIGHT_W;
 			drawRect.h = MM_CHARACTER_SELECT_HIGHLIGHT_H;
 
@@ -2238,7 +2316,10 @@ dontDrawSelectCharacter:
 			}
 
 			// draw string
-			const char *characterName = sdata->lngStrings[data.MetaDataCharacters[activeCharacterSelectMeta->characterID].name_LNG_long];
+				s16 characterID = data.characterIDs[playerIndex];
+				if (playerCharacterMeta != NULL)
+					characterID = playerCharacterMeta->characterID;
+				const char *characterName = sdata->lngStrings[data.MetaDataCharacters[characterID].name_LNG_long];
 #if defined(CTR_NATIVE)
 			const int customRacerIndex = NativeCustomRacer_GetPlayerSelection(playerIndex);
 			if (customRacerIndex >= 0)
