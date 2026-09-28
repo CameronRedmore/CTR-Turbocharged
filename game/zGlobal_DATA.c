@@ -4357,8 +4357,8 @@ struct Data
                 {
                     {0x2, 3, 1, 0, 0}, // RESUME
                     {0xB, 0, 2, 1, 1}, // AKU AKU HINTS
-                    {0x3, 1, 3, 2, 2}, // QUIT
-                    {0xE, 2, 0, 3, 3}, // OPTIONS
+                    {0xE, 1, 3, 2, 2}, // OPTIONS
+                    {0x3, 2, 0, 3, 3}, // QUIT
                     {-1, 0, 0, 0, 0}   // NULL
                 },
 
@@ -4378,8 +4378,8 @@ struct Data
                 {
                     {0x2, 3, 1, 0, 0}, // RESUME
                     {0x1, 0, 2, 1, 1}, // RESTART
-                    {0xD, 1, 3, 2, 2}, // EXIT TO MAP
-                    {0xE, 2, 0, 3, 3}, // OPTIONS
+                    {0xE, 1, 3, 2, 2}, // OPTIONS
+                    {0xD, 2, 0, 3, 3}, // EXIT TO MAP
                     {-1, 0, 0, 0, 0}   // NULL
                 },
 
@@ -4398,8 +4398,8 @@ struct Data
             .rowsAdvCup =
                 {
                     {0x2, 2, 1, 0, 0}, // RESUME
-                    {0xD, 0, 2, 1, 1}, // EXIT TO MAP
-                    {0xE, 1, 0, 2, 2}, // OPTIONS
+                    {0xE, 0, 2, 1, 1}, // OPTIONS
+                    {0xD, 1, 0, 2, 2}, // EXIT TO MAP
                     {-1, 0, 0, 0, 0}   // NULL
                 },
 
@@ -4422,8 +4422,8 @@ struct Data
                     {0x5, 1, 3, 2, 2}, // CHANGE CHARACTER
                     {0x6, 2, 4, 3, 3}, // CHANGE LEVEL
                     {0xA, 3, 5, 4, 4}, // CHANGE SETUP
-                    {0x3, 4, 6, 5, 5}, // QUIT
-                    {0xE, 5, 0, 6, 6}, // OPTIONS
+                    {0xE, 4, 6, 5, 5}, // OPTIONS
+                    {0x3, 5, 0, 6, 6}, // QUIT
                     {-1, 0, 0, 0, 0}   // NULL
                 },
 
@@ -4442,8 +4442,8 @@ struct Data
             .rowsArcadeCup =
                 {
                     {0x2, 2, 1, 0, 0}, // RESUME
-                    {0x3, 0, 2, 1, 1}, // QUIT
-                    {0xE, 1, 0, 2, 2}, // OPTIONS
+                    {0xE, 0, 2, 1, 1}, // OPTIONS
+                    {0x3, 1, 0, 2, 2}, // QUIT
                     {-1, 0, 0, 0, 0}   // NULL
                 },
 
@@ -4465,8 +4465,8 @@ struct Data
                     {0x1, 0, 2, 1, 1}, // RESTART
                     {0x5, 1, 3, 2, 2}, // CHANGE CHARACTER
                     {0x6, 2, 4, 3, 3}, // CHANGE LEVEL
-                    {0x3, 3, 5, 4, 4}, // QUIT
-                    {0xE, 4, 0, 5, 5}, // OPTIONS
+                    {0xE, 3, 5, 4, 4}, // OPTIONS
+                    {0x3, 4, 0, 5, 5}, // QUIT
                     {-1, 0, 0, 0, 0}   // NULL
                 },
 

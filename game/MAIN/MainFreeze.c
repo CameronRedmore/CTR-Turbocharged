@@ -1207,13 +1207,13 @@ struct RectMenu *MainFreeze_GetMenuPtr(void)
 	if (gNativeGhostReplayMode != 0)
 	{
 		static struct MenuRow ghostReplayRows[] =
-		{
-			{LNG_RESUME, 3, 1, 0, 0},
-			{LNG_RESTART, 0, 2, 1, 1},
-			{LNG_QUIT, 1, 3, 2, 2},
-			{LNG_OPTIONS, 2, 0, 3, 3},
-			{RECTMENU_STRING_NONE, 0, 0, 0, 0},
-		};
+			{
+				{LNG_RESUME, 3, 1, 0, 0},
+				{LNG_RESTART, 0, 2, 1, 1},
+				{LNG_OPTIONS, 1, 3, 2, 2},
+				{LNG_QUIT, 2, 0, 3, 3},
+				{RECTMENU_STRING_NONE, 0, 0, 0, 0},
+			};
 		static struct RectMenu ghostReplayMenu;
 
 		ghostReplayMenu = data.menuArcadeRace;
