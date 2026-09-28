@@ -166,9 +166,11 @@ static struct MenuRow s_nativeMainMenuBasic[] =
 	{NATIVE_MENU_STRING_BOSS_FIGHT, 4, 6, 5, 5},
 #if defined(__vita__)
 	{NATIVE_MENU_STRING_ADHOC, 5, 7, 6, 6},
-	{LNG_OPTIONS, 6, 7, 7, 7},
+	{LNG_OPTIONS, 6, 8, 7, 7},
+	{NATIVE_MENU_STRING_EXIT_GAME, 7, 8, 8, 8},
 #else
-	{LNG_OPTIONS, 5, 6, 6, 6},
+	{LNG_OPTIONS, 5, 7, 6, 6},
+	{NATIVE_MENU_STRING_EXIT_GAME, 6, 7, 7, 7},
 #endif
 	{RECTMENU_STRING_NONE},
 };
@@ -184,10 +186,12 @@ static struct MenuRow s_nativeMainMenuWithScrapbook[] =
 #if defined(__vita__)
 	{NATIVE_MENU_STRING_ADHOC, 5, 7, 6, 6},
 	{LNG_OPTIONS, 6, 8, 7, 7},
-	{LNG_SCRAPBOOK, 7, 8, 8, 8},
+	{LNG_SCRAPBOOK, 7, 9, 8, 8},
+	{NATIVE_MENU_STRING_EXIT_GAME, 8, 9, 9, 9},
 #else
 	{LNG_OPTIONS, 5, 7, 6, 6},
-	{LNG_SCRAPBOOK, 6, 7, 7, 7},
+	{LNG_SCRAPBOOK, 6, 8, 7, 7},
+	{NATIVE_MENU_STRING_EXIT_GAME, 7, 8, 8, 8},
 #endif
 	{RECTMENU_STRING_NONE},
 };
@@ -1447,6 +1451,12 @@ void MM_MenuProc_Main(struct RectMenu *mainMenu)
 
 		mainMenu->ptrNextBox_InHierarchy = &s_nativeOptionsMenu;
 		mainMenu->state |= DRAW_NEXT_MENU_IN_HIERARCHY;
+		return;
+	}
+
+	if (choose == NATIVE_MENU_STRING_EXIT_GAME)
+	{
+		sdata->mainGameState = 5;
 		return;
 	}
 #endif

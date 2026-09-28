@@ -91,14 +91,12 @@ u32 main(void)
 
 	do
 	{
-#ifndef CTR_NATIVE
 		// wont happen under normal conditions
 		if (sdata->mainGameState == 5)
 		{
 			MainKillGame_StopCTR();
 			return 0;
 		}
-#endif
 
 		LOAD_NextQueuedFile();
 		// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8003c5d0-0x8003c5dc for per-frame XA pause handling.

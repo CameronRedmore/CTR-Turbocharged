@@ -144,6 +144,15 @@ static char *RECTMENU_GetString(s16 stringIndex)
 		"ADHOC",
 		"ADHOC",
 	};
+	static const char *exitGame[6] =
+	{
+		"EXIT GAME",
+		"QUITTER LE JEU",
+		"SPIEL BEENDEN",
+		"ESCI DAL GIOCO",
+		"SALIR DEL JUEGO",
+		"SPEL AFSLUITEN",
+	};
 	static const char *onlineLeaderboard[6] =
 	{
 		"ONLINE LEADERBOARD",
@@ -349,6 +358,8 @@ static char *RECTMENU_GetString(s16 stringIndex)
 		return (char *)changeBoss[languageRow];
 	case NATIVE_MENU_STRING_ADHOC:
 		return (char *)adhoc[languageRow];
+	case NATIVE_MENU_STRING_EXIT_GAME:
+		return (char *)exitGame[languageRow];
 	case NATIVE_MENU_STRING_ONLINE_LEADERBOARD:
 		return (char *)onlineLeaderboard[languageRow];
 	case NATIVE_MENU_STRING_WATCH_GHOST:
