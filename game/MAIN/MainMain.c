@@ -220,7 +220,7 @@ u32 main(void)
 			// Arcade-Style track starts with intro cutscene
 			uVar12 = 9;
 
-				if (
+			if (
 			    // If Level ID is less than 18, it's one of the race tracks
 			    (gGT->levelID < NITRO_COURT) || (
 			                                        // Battle-Style track starts with traffic lights
@@ -228,18 +228,18 @@ u32 main(void)
 			                                        // Level ID >= 18 and < 23
 			                                        // Battle tracks
 			                                        gGT->levelID - NITRO_COURT < 7))
-				{
+			{
 #if defined(__vita__)
-					if (!(NativeAdhoc_IsConnected() && (uVar12 == AUDIO_RACE_INTRO)))
+				if (!(NativeAdhoc_IsConnected() && (uVar12 == AUDIO_RACE_INTRO)))
 #endif
-					{
-						Audio_SetState_Safe(uVar12);
-					}
+				{
+					Audio_SetState_Safe(uVar12);
 				}
+			}
 #ifdef CTR_NATIVE
-				NativeAdhoc_NotifyLevelReady(gGT);
+			NativeAdhoc_NotifyLevelReady(gGT);
 #endif
-				sdata->mainGameState = 3;
+			sdata->mainGameState = 3;
 			gGT->clockEffectEnabled &= 0xfffe;
 			break;
 
@@ -409,23 +409,23 @@ u32 main(void)
 				{
 #endif
 
-			// frame counter, not represented in common.h currently
-			sdata->frameCounter++;
+					// frame counter, not represented in common.h currently
+					sdata->frameCounter++;
 
-			// Process all gamepad input
+					// Process all gamepad input
 #if defined(CTR_NATIVE) && defined(CTR_INTERNAL)
-			{
-				struct NativeReplaySchedulerFrameInfo replayFrameInfo = MainReplayScheduler_FrameInfo(gGT);
+					{
+						struct NativeReplaySchedulerFrameInfo replayFrameInfo = MainReplayScheduler_FrameInfo(gGT);
 
-				if (NativeReplayScheduler_BeginFrame(&replayFrameInfo) != 0)
-				{
-					return 0;
-				}
-					NativeSaveState_BeginFrame();
-					gGT = sdata->gGT;
-					gGS = sdata->gGamepads;
-					nativeReplayFrameActive = 1;
-				}
+						if (NativeReplayScheduler_BeginFrame(&replayFrameInfo) != 0)
+						{
+							return 0;
+						}
+						NativeSaveState_BeginFrame();
+						gGT = sdata->gGT;
+						gGS = sdata->gGamepads;
+						nativeReplayFrameActive = 1;
+					}
 #endif
 					GAMEPAD_ProcessAnyoneVars(gGS);
 
@@ -437,104 +437,104 @@ u32 main(void)
 					}
 #endif
 
-				if (
+					if (
 #if defined(CTR_NATIVE)
-				    nativeGhostRunSimulation &&
+					    nativeGhostRunSimulation &&
 #endif
-				    (-960 < gGT->trafficLightsTimer) &&
-				    ((gGT->gameMode1 & (START_OF_RACE | PAUSE_ALL)) == 0) &&
-				    (iVar8 = gGT->trafficLightsTimer - gGT->elapsedTimeMS,
-				     gGT->trafficLightsTimer = iVar8,
-				     iVar8 < -960))
-				{
-					gGT->trafficLightsTimer = 0xfffffc40;
-				}
+					    (-960 < gGT->trafficLightsTimer) &&
+					    ((gGT->gameMode1 & (START_OF_RACE | PAUSE_ALL)) == 0) &&
+					    (iVar8 = gGT->trafficLightsTimer - gGT->elapsedTimeMS,
+					     gGT->trafficLightsTimer = iVar8,
+					     iVar8 < -960))
+					{
+						gGT->trafficLightsTimer = 0xfffffc40;
+					}
 
 #ifdef CTR_NATIVE
 				}
 #endif
 
-					// Start new frame (ClearOTagR)
+				// Start new frame (ClearOTagR)
 				MainFrame_ResetDB(gGT);
 
 #ifdef CTR_NATIVE
 				if (nativeAdhocRunSimulation)
 				{
 #endif
-				if (
-			    // If you're in Demo Mode
-			    (gGT->boolDemoMode != 0) &&
+					if (
+					    // If you're in Demo Mode
+					    (gGT->boolDemoMode != 0) &&
 
-			    (
-			        // Turn off HUD
-			        gGT->hudFlags &= HUD_FLAG_CLEAR_RACE_HUD_MASK,
-			        // if game is not loading
-			        sdata->Loading.stage == LOAD_IDLE))
-			{
-				// All this code is for the 30-second timer within Demo Mode
-				// To see 30-second timer in Main Menu, go to FUN_00001604 in 230.c
-				// pressing (or holding) any button sets it to zero
-
-				gGT->demoCountdownTimer--;
-
-				// check to see if time ran out
-				if (gGT->demoCountdownTimer < 1)
-				{
-					// leave demo mode, go to main menu
-					gGT->boolDemoMode = 0;
-					gGT->numPlyrNextGame = 1;
-					sdata->mainMenuState = MAIN_MENU_TITLE;
-
-				LAB_8003ce08:
-					MainRaceTrack_RequestLoad(MAIN_MENU_LEVEL);
-				}
-
-				// if time remains on the timer
-				else
-				{
-					// if any button is pressed by anyone
-					if (gGS->anyoneHeldCurr != 0)
+					    (
+					        // Turn off HUD
+					        gGT->hudFlags &= HUD_FLAG_CLEAR_RACE_HUD_MASK,
+					        // if game is not loading
+					        sdata->Loading.stage == LOAD_IDLE))
 					{
-						// leave demo mode
-						gGT->boolDemoMode = 0;
-						goto LAB_8003ce08;
+						// All this code is for the 30-second timer within Demo Mode
+						// To see 30-second timer in Main Menu, go to FUN_00001604 in 230.c
+						// pressing (or holding) any button sets it to zero
+
+						gGT->demoCountdownTimer--;
+
+						// check to see if time ran out
+						if (gGT->demoCountdownTimer < 1)
+						{
+							// leave demo mode, go to main menu
+							gGT->boolDemoMode = 0;
+							gGT->numPlyrNextGame = 1;
+							sdata->mainMenuState = MAIN_MENU_TITLE;
+
+					LAB_8003ce08:
+							MainRaceTrack_RequestLoad(MAIN_MENU_LEVEL);
+						}
+
+						// if time remains on the timer
+						else
+						{
+							// if any button is pressed by anyone
+							if (gGS->anyoneHeldCurr != 0)
+							{
+								// leave demo mode
+								gGT->boolDemoMode = 0;
+								goto LAB_8003ce08;
+							}
+						}
+
+						// if numPlyrCurrGame is 1
+						if (gGT->numPlyrCurrGame == 1)
+						{
+							// Draw text near top of screen
+							uVar12 = 0x23;
+						}
+
+						// if this is multiplayer
+						else
+						{
+							// draw text halfway to top of screen
+							uVar12 = 100;
+						}
+
+						DecalFont_DrawMultiLine(sdata->lngStrings[LNG_DEMO_MODE_PRESS_ANY_BUTTON_TO_EXIT], 0x100, uVar12, 0x200, 2, 0xffff8000);
 					}
-				}
 
-				// if numPlyrCurrGame is 1
-				if (gGT->numPlyrCurrGame == 1)
-				{
-					// Draw text near top of screen
-					uVar12 = 0x23;
-				}
-
-				// if this is multiplayer
-				else
-				{
-					// draw text halfway to top of screen
-					uVar12 = 100;
-				}
-
-				DecalFont_DrawMultiLine(sdata->lngStrings[LNG_DEMO_MODE_PRESS_ANY_BUTTON_TO_EXIT], 0x100, uVar12, 0x200, 2, 0xffff8000);
-			}
-
-			if ((gGT->gameMode1 & LOADING) == 0
+					if ((gGT->gameMode1 & LOADING) == 0
 #if defined(CTR_NATIVE)
-			    && nativeGhostRunSimulation
+					    && nativeGhostRunSimulation
 #endif
-			)
-			{
+					)
+					{
 #if defined(CTR_NATIVE) && defined(CTR_INTERNAL)
-				NativePerf_BeginScope(NATIVE_PERF_BUCKET_GAME_LOGIC);
+						NativePerf_BeginScope(NATIVE_PERF_BUCKET_GAME_LOGIC);
 #endif
-					MainFrame_GameLogic(gGT, gGS);
+						MainFrame_GameLogic(gGT, gGS);
 #if defined(CTR_NATIVE)
-					NativeGhostInput_EndReplaySimulationFrame();
+						NativeGhostInput_EndReplaySimulationFrame();
 #endif
 #if defined(CTR_NATIVE) && defined(CTR_INTERNAL)
-					NativePerf_EndScope(NATIVE_PERF_BUCKET_GAME_LOGIC);
+						NativePerf_EndScope(NATIVE_PERF_BUCKET_GAME_LOGIC);
 #endif
-				}
+					}
 
 #ifdef CTR_NATIVE
 					NativeAdhoc_EndSimulationFrame(gGT);
@@ -573,9 +573,9 @@ u32 main(void)
 				AH_MaskHint_Update();
 			}
 #if defined(CTR_NATIVE) && defined(CTR_INTERNAL)
-				if (nativeReplayFrameActive)
-				{
-					struct NativeReplaySchedulerFrameInfo replayFrameInfo = MainReplayScheduler_FrameInfo(gGT);
+			if (nativeReplayFrameActive)
+			{
+				struct NativeReplaySchedulerFrameInfo replayFrameInfo = MainReplayScheduler_FrameInfo(gGT);
 
 				if (NativeReplayScheduler_EndFrame(&replayFrameInfo) != 0)
 				{

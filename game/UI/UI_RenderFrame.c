@@ -101,11 +101,11 @@ void UI_RenderFrame_Racing()
 #endif
 
 #if defined(CTR_NATIVE)
-		const char *replayControlStatus = NativeGhostInput_GetReplayControlStatus();
-		if (replayControlStatus != NULL)
-		{
-			UI_RenderFrame_DrawReplayControls(replayControlStatus);
-		}
+	const char *replayControlStatus = NativeGhostInput_GetReplayControlStatus();
+	if (replayControlStatus != NULL)
+	{
+		UI_RenderFrame_DrawReplayControls(replayControlStatus);
+	}
 #endif
 
 		// Get pointer to array of HUD structs

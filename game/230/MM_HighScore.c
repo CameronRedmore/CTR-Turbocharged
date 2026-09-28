@@ -393,10 +393,10 @@ void MM_HighScore_MenuProc(struct RectMenu *menu_unused)
 				{
 					D230.highScoreSelection.targetTrack = MM_HIGHSCORE_LAST_TRACK;
 				}
-				#if defined(CTR_NATIVE)
-					trackOpen = MM_HighScore_IsMenuTrackOpen(D230.highScoreSelection.targetTrack);
+#if defined(CTR_NATIVE)
+				trackOpen = MM_HighScore_IsMenuTrackOpen(D230.highScoreSelection.targetTrack);
 #else
-					trackOpen = MM_TrackSelect_boolTrackOpen(D230.arcadeTracks + D230.highScoreSelection.targetTrack);
+				trackOpen = MM_TrackSelect_boolTrackOpen(D230.arcadeTracks + D230.highScoreSelection.targetTrack);
 #endif
 			} while (!trackOpen);
 		}

@@ -51,24 +51,24 @@ static char *RECTMENU_GetString(s16 stringIndex)
 		{"CAMARA: CERCA", "CAMARA: LEJOS"},
 		{"CAMERA: DICHTBIJ", "CAMERA: VER"},
 	};
-		static const char *defaultHud[6][2] =
-		{
-			{"HUD: MINIMAP", "HUD: SPEEDOMETER"},
+	static const char *defaultHud[6][2] =
+	{
+		{"HUD: MINIMAP", "HUD: SPEEDOMETER"},
 		{"HUD: MINI-CARTE", "HUD: COMPTEUR"},
 		{"HUD: MINIKARTE", "HUD: TACHO"},
 		{"HUD: MINIMAPPA", "HUD: TACHIMETRO"},
 		{"HUD: MINIMAPA", "HUD: VELOCIMETRO"},
-			{"HUD: MINIKAART", "HUD: SNELHEID"},
-		};
-		static const char *customAIRacers[6][2] =
-		{
-			{"CUSTOM RACERS FOR AI: OFF", "CUSTOM RACERS FOR AI: ON"},
-			{"PILOTES CUSTOM IA: NON", "PILOTES CUSTOM IA: OUI"},
-			{"CUSTOM-FAHRER KI: AUS", "CUSTOM-FAHRER KI: EIN"},
-			{"PILOTI CUSTOM IA: NO", "PILOTI CUSTOM IA: SI"},
-			{"PILOTOS CUSTOM IA: NO", "PILOTOS CUSTOM IA: SI"},
-			{"CUSTOM RACERS AI: UIT", "CUSTOM RACERS AI: AAN"},
-		};
+		{"HUD: MINIKAART", "HUD: SNELHEID"},
+	};
+	static const char *customAIRacers[6][2] =
+	{
+		{"CUSTOM RACERS FOR AI: OFF", "CUSTOM RACERS FOR AI: ON"},
+		{"PILOTES CUSTOM IA: NON", "PILOTES CUSTOM IA: OUI"},
+		{"CUSTOM-FAHRER KI: AUS", "CUSTOM-FAHRER KI: EIN"},
+		{"PILOTI CUSTOM IA: NO", "PILOTI CUSTOM IA: SI"},
+		{"PILOTOS CUSTOM IA: NO", "PILOTOS CUSTOM IA: SI"},
+		{"CUSTOM RACERS AI: UIT", "CUSTOM RACERS AI: AAN"},
+	};
 #ifndef __vita__
 	static const char *antiAliasing[2] =
 	{

@@ -403,13 +403,13 @@ int LOAD_DriverMPK(struct BigHeader *bigfile, int levelLOD, void (*callback)(str
 		}
 		NativeAIRandomizer_ClearCustomAISelections(firstNonHuman);
 	}
-		// The AI randomizer composes every selected custom racer's VRAM after the
-		// driver banks finish loading. Avoid spending one of the eight retail queue
-		// slots on a full custom SHAREDMPK.VRM in that path.
-		if (!NativeAIRandomizer_ShouldUse(gGT))
-		{
-			NativeCustomRacer_QueueSharedVramForSelections(bigfile);
-		}
+	// The AI randomizer composes every selected custom racer's VRAM after the
+	// driver banks finish loading. Avoid spending one of the eight retail queue
+	// slots on a full custom SHAREDMPK.VRM in that path.
+	if (!NativeAIRandomizer_ShouldUse(gGT))
+	{
+		NativeCustomRacer_QueueSharedVramForSelections(bigfile);
+	}
 #endif
 #if defined(__vita__)
 	if (NativeAdhoc_EnforcePreparedRaceConfig(gGT))
@@ -494,18 +494,18 @@ int LOAD_DriverMPK(struct BigHeader *bigfile, int levelLOD, void (*callback)(str
 		}
 
 #if defined(CTR_NATIVE)
-				if (NativeAIRandomizer_ShouldUse(gGT) && (NativeCustomRacer_GetDriverSelection(0) >= 0))
-				{
-					if (!NativeCustomRacer_LoadDriverModelNow(0, &data.driverModelExtras[0].fileBase))
-					{
-						fprintf(stderr, "[CTR Native] Failed to load custom racer for driver 0; using retail template.\n");
-						NativeCustomRacer_SetDriverSelection(0, -1);
-					}
-				}
-			else
+		if (NativeAIRandomizer_ShouldUse(gGT) && (NativeCustomRacer_GetDriverSelection(0) >= 0))
+		{
+			if (!NativeCustomRacer_LoadDriverModelNow(0, &data.driverModelExtras[0].fileBase))
 			{
-				NativeCustomRacer_QueueSelectedModel(0, &data.driverModelExtras[0].fileBase);
+				fprintf(stderr, "[CTR Native] Failed to load custom racer for driver 0; using retail template.\n");
+				NativeCustomRacer_SetDriverSelection(0, -1);
 			}
+		}
+		else
+		{
+			NativeCustomRacer_QueueSelectedModel(0, &data.driverModelExtras[0].fileBase);
+		}
 #endif
 
 #if defined(CTR_NATIVE)

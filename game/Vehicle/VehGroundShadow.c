@@ -400,26 +400,26 @@ void VehGroundShadow_Main(void)
 	}
 	scratch->sentinelDriver = NULL;
 
-		int playerFirst = numPlayers - 1;
-		int playerLast = 0;
+	int playerFirst = numPlayers - 1;
+	int playerLast = 0;
+#if defined(__vita__)
+	if (NativeAdhoc_IsSingleViewRenderActive())
+	{
+		playerFirst = NativeAdhoc_GetLocalPlayerIndex();
+		playerLast = playerFirst;
+	}
+#endif
+
+	for (int playerIndex = playerFirst; playerIndex >= playerLast; playerIndex--)
+	{
+		struct PushBuffer *pb = &gGT->pushBuffer[playerIndex];
 #if defined(__vita__)
 		if (NativeAdhoc_IsSingleViewRenderActive())
 		{
-			playerFirst = NativeAdhoc_GetLocalPlayerIndex();
-			playerLast = playerFirst;
+			pb = NativeAdhoc_GetRenderPushBuffer();
 		}
 #endif
-
-		for (int playerIndex = playerFirst; playerIndex >= playerLast; playerIndex--)
-		{
-			struct PushBuffer *pb = &gGT->pushBuffer[playerIndex];
-#if defined(__vita__)
-			if (NativeAdhoc_IsSingleViewRenderActive())
-			{
-				pb = NativeAdhoc_GetRenderPushBuffer();
-			}
-#endif
-			s32 camX = pb->matrix_Camera.t[0];
+		s32 camX = pb->matrix_Camera.t[0];
 		s32 camY = pb->matrix_Camera.t[1];
 		s32 camZ = pb->matrix_Camera.t[2];
 		u32 *otBase = pb->ptrOT;

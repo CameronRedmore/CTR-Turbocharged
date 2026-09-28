@@ -1499,13 +1499,13 @@ int NativeCustomRacer_LoadQueueSlot(struct LoadQueueSlot *slot)
 
 	if (slot->type_UNUSED == LT_DRAM)
 	{
-			const int driverModelIndex = (assetIndex == NATIVE_CUSTOM_RACER_ASSET_MODEL_HI)
-				? NativeCustomRacer_DriverIndexForModelTarget(setPointerTarget)
-				: -1;
-			if (driverModelIndex >= 0)
-			{
-				free(s_nativeCustomRacerDriverModelStorage[driverModelIndex]);
-				s_nativeCustomRacerDriverModelStorage[driverModelIndex] = destination;
+		const int driverModelIndex = (assetIndex == NATIVE_CUSTOM_RACER_ASSET_MODEL_HI)
+			? NativeCustomRacer_DriverIndexForModelTarget(setPointerTarget)
+			: -1;
+		if (driverModelIndex >= 0)
+		{
+			free(s_nativeCustomRacerDriverModelStorage[driverModelIndex]);
+			s_nativeCustomRacerDriverModelStorage[driverModelIndex] = destination;
 		}
 		else
 		{

@@ -344,31 +344,31 @@ void OptionsMenu_TestSound(int newRow, int newBoolPlay)
 		int sampleVoiceID;
 
 		// every 25th frame
-			if (frameCount == (frameCount / 25) * 25)
+		if (frameCount == (frameCount / 25) * 25)
+		{
+			int sampleVoiceType;
+
+			// every 50th frame (0, 50, 100, 150)
+			if (frameCount == (frameCount / 50) * 50)
 			{
-				int sampleVoiceType;
+				sampleVoiceID = characterID + 0x1c;
+				sampleVoiceType = 0;
+			}
 
-				// every 50th frame (0, 50, 100, 150)
-				if (frameCount == (frameCount / 50) * 50)
-				{
-					sampleVoiceID = characterID + 0x1c;
-					sampleVoiceType = 0;
-				}
-
-				// every 50th frame (25, 75, 125, 175)
-				else
-				{
-					sampleVoiceID = characterID + 0x2c;
-					sampleVoiceType = 1;
-				}
+			// every 50th frame (25, 75, 125, 175)
+			else
+			{
+				sampleVoiceID = characterID + 0x2c;
+				sampleVoiceType = 1;
+			}
 
 #if defined(CTR_NATIVE)
-				if (!NativeCustomRacer_PlayDriverSampledVoice(driverID, sampleVoiceType, characterID,
-				                                                &sdata->OptionSlider_soundID))
+			if (!NativeCustomRacer_PlayDriverSampledVoice(driverID, sampleVoiceType, characterID,
+			                                                &sdata->OptionSlider_soundID))
 #endif
-				{
-					sdata->OptionSlider_soundID = OtherFX_Play(sampleVoiceID, 0);
-				}
+			{
+				sdata->OptionSlider_soundID = OtherFX_Play(sampleVoiceID, 0);
 			}
 		}
+	}
 }

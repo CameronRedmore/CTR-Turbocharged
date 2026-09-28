@@ -3122,14 +3122,14 @@ internal int ProcessGouraudPoly(P_TAG *polyTag)
 
 		AddSplit(semiTrans, true, NativeGpu_TPageOverlapsActiveDrawPage(poly->tpage), poly->clut);
 
-			GrVertex *firstVertex = &s_gpu.vertexBuffer[s_gpu.vertexIndex];
-			MakeVertexTriangle(firstVertex, &poly->x0, &poly->x1, &poly->x2);
-			MakeTexcoordTriangle(firstVertex, &poly->u0, &poly->u1, &poly->u2, poly->tpage, poly->clut, GET_TPAGE_DITHER(activeDrawEnv.tpage) || activeDrawEnv.dtd);
-			MakeColourTriangle(firstVertex, shadeTexOn, &poly->r0, &poly->r1, &poly->r2);
-			if (((u32)poly->tpage & NATIVE_GPU_TPAGE_SUPER_TURBO_TINT) != 0)
-			{
-					MakeColourSuperTurboTint(firstVertex, 3);
-			}
+		GrVertex *firstVertex = &s_gpu.vertexBuffer[s_gpu.vertexIndex];
+		MakeVertexTriangle(firstVertex, &poly->x0, &poly->x1, &poly->x2);
+		MakeTexcoordTriangle(firstVertex, &poly->u0, &poly->u1, &poly->u2, poly->tpage, poly->clut, GET_TPAGE_DITHER(activeDrawEnv.tpage) || activeDrawEnv.dtd);
+		MakeColourTriangle(firstVertex, shadeTexOn, &poly->r0, &poly->r1, &poly->r2);
+		if (((u32)poly->tpage & NATIVE_GPU_TPAGE_SUPER_TURBO_TINT) != 0)
+		{
+			MakeColourSuperTurboTint(firstVertex, 3);
+		}
 
 		s_gpu.vertexIndex += 3;
 
@@ -3159,15 +3159,15 @@ internal int ProcessGouraudPoly(P_TAG *polyTag)
 
 		AddSplit(semiTrans, true, NativeGpu_TPageOverlapsActiveDrawPage(poly->tpage), poly->clut);
 
-			GrVertex *firstVertex = &s_gpu.vertexBuffer[s_gpu.vertexIndex];
-			MakeVertexQuad(firstVertex, &poly->x0, &poly->x1, &poly->x3, &poly->x2);
-			MakeTexcoordQuad(firstVertex, &poly->u0, &poly->u1, &poly->u3, &poly->u2, poly->tpage, poly->clut,
-			                 GET_TPAGE_DITHER(activeDrawEnv.tpage) || activeDrawEnv.dtd);
-			MakeColourQuad(firstVertex, shadeTexOn, &poly->r0, &poly->r1, &poly->r3, &poly->r2);
-			if (((u32)poly->tpage & NATIVE_GPU_TPAGE_SUPER_TURBO_TINT) != 0)
-			{
-					MakeColourSuperTurboTint(firstVertex, 4);
-			}
+		GrVertex *firstVertex = &s_gpu.vertexBuffer[s_gpu.vertexIndex];
+		MakeVertexQuad(firstVertex, &poly->x0, &poly->x1, &poly->x3, &poly->x2);
+		MakeTexcoordQuad(firstVertex, &poly->u0, &poly->u1, &poly->u3, &poly->u2, poly->tpage, poly->clut,
+		                 GET_TPAGE_DITHER(activeDrawEnv.tpage) || activeDrawEnv.dtd);
+		MakeColourQuad(firstVertex, shadeTexOn, &poly->r0, &poly->r1, &poly->r3, &poly->r2);
+		if (((u32)poly->tpage & NATIVE_GPU_TPAGE_SUPER_TURBO_TINT) != 0)
+		{
+			MakeColourSuperTurboTint(firstVertex, 4);
+		}
 
 		TriangulateQuad();
 

@@ -156,7 +156,7 @@ void NativeNetwork_Update(void)
         s_nativeNetworkRestoreRequested = false;
         s_nativeNetworkRestoreProbeActive = false;
         s_nativeNetworkRestoreNextProbeTimeUs = 0;
-            return;
+        return;
     }
 
     u64 now = sceKernelGetProcessTimeWide();

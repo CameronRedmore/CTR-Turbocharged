@@ -616,7 +616,7 @@ b32 MainFrame_HaveAllPads(s16 numPlyrNextGame)
 		struct GamepadBuffer *gb = &sdata->gGamepads->gamepad[0];
 #if defined(__vita__)
 		int adhocRemotePlayer = -1;
-			if (NativeAdhoc_IsActive() && (numPlyrNextGame == 2))
+		if (NativeAdhoc_IsActive() && (numPlyrNextGame == 2))
 		{
 			adhocRemotePlayer = NativeAdhoc_GetRemotePlayerIndex();
 		}

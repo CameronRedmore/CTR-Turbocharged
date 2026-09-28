@@ -3454,43 +3454,43 @@ internal void SDLCALL NativeAudio_StreamCallback(void *userdata, SDL_AudioStream
 	}
 #endif
 
-		while (framesNeeded > 0)
+	while (framesNeeded > 0)
+	{
+		int chunkFrames = framesNeeded < NATIVE_AUDIO_VBLANK_FRAMES ? framesNeeded : NATIVE_AUDIO_VBLANK_FRAMES;
+		int framesReady;
+
+		if (s_audio.output.deterministicRenderMode)
 		{
-			int chunkFrames = framesNeeded < NATIVE_AUDIO_VBLANK_FRAMES ? framesNeeded : NATIVE_AUDIO_VBLANK_FRAMES;
-			int framesReady;
-
-			if (s_audio.output.deterministicRenderMode)
+			framesReady = NativeAudio_DrainRenderedFramesNoLock(out, chunkFrames);
+			if (framesReady < chunkFrames)
 			{
-				framesReady = NativeAudio_DrainRenderedFramesNoLock(out, chunkFrames);
-				if (framesReady < chunkFrames)
-				{
-					memset(&out[framesReady * NATIVE_AUDIO_CHANNELS], 0, (size_t)(chunkFrames - framesReady) * frameBytes);
-					NativeAudio_AddUnderrunFramesNoLock(chunkFrames - framesReady);
-				}
+				memset(&out[framesReady * NATIVE_AUDIO_CHANNELS], 0, (size_t)(chunkFrames - framesReady) * frameBytes);
+				NativeAudio_AddUnderrunFramesNoLock(chunkFrames - framesReady);
 			}
-			else
+		}
+		else
+		{
+#if defined(__vita__)
+			NativeAudio_ApplyPendingCommandsNoLock();
+#endif
+			framesReady = NativeAudio_RenderFramesNoLock(out, chunkFrames);
+			if (framesReady < chunkFrames)
 			{
-#if defined(__vita__)
-				NativeAudio_ApplyPendingCommandsNoLock();
-#endif
-				framesReady = NativeAudio_RenderFramesNoLock(out, chunkFrames);
-				if (framesReady < chunkFrames)
-				{
-					memset(&out[framesReady * NATIVE_AUDIO_CHANNELS], 0, (size_t)(chunkFrames - framesReady) * frameBytes);
-				}
-#if defined(__vita__)
-				NativeAudio_UpdateXAReadbackNoLock();
-#endif
+				memset(&out[framesReady * NATIVE_AUDIO_CHANNELS], 0, (size_t)(chunkFrames - framesReady) * frameBytes);
 			}
-
-			if (!SDL_PutAudioStreamData(stream, out, chunkFrames * frameBytes))
-			{
-				NativeAudio_AddUnderrunFramesNoLock(chunkFrames);
-				break;
+#if defined(__vita__)
+			NativeAudio_UpdateXAReadbackNoLock();
+#endif
 		}
 
-			framesNeeded -= chunkFrames;
+		if (!SDL_PutAudioStreamData(stream, out, chunkFrames * frameBytes))
+		{
+			NativeAudio_AddUnderrunFramesNoLock(chunkFrames);
+			break;
 		}
+
+		framesNeeded -= chunkFrames;
+	}
 }
 
 void NativeAudio_ClearOutputQueue(void)
@@ -3713,11 +3713,11 @@ int NativeAudio_RestoreState(const void *src, int srcSize)
 		}
 	}
 
-		NativeAudio_LockOutput();
+	NativeAudio_LockOutput();
 
-		NativeAudio_CloseXANoLock();
+	NativeAudio_CloseXANoLock();
 #if defined(__vita__)
-		NativeAudio_InvalidateXAMaxSampleCacheNoLock();
+	NativeAudio_InvalidateXAMaxSampleCacheNoLock();
 #endif
 
 	s_audio.init = restoreInit;
@@ -3738,13 +3738,13 @@ int NativeAudio_RestoreState(const void *src, int srcSize)
 	// packages, so snapshots only restore the hardware-visible 512KB region.
 	memcpy(s_audio.spu.memory, snapshot->spuSampleMem, sizeof(snapshot->spuSampleMem));
 	s_audio.spu.transferOffset = snapshot->spuTransferOffset;
-		for (i = 0; i < NATIVE_AUDIO_SPU_VOICE_COUNT; i++)
-		{
-			NativeAudio_CopyStateToVoice(&s_audio.voices[i], &snapshot->voices[i]);
-		}
-		NativeAudio_RefreshAllVoiceGainsNoLock();
+	for (i = 0; i < NATIVE_AUDIO_SPU_VOICE_COUNT; i++)
+	{
+		NativeAudio_CopyStateToVoice(&s_audio.voices[i], &snapshot->voices[i]);
+	}
+	NativeAudio_RefreshAllVoiceGainsNoLock();
 
-		if (snapshot->xa.active && snapshot->xa.hasTrackIdentity)
+	if (snapshot->xa.active && snapshot->xa.hasTrackIdentity)
 	{
 		NativeAudio_XaStreamStartNoLock(&xaPrepared);
 		s_audio.xa.frameCount = xaPrepared.frameCount;
@@ -3774,12 +3774,12 @@ int NativeAudio_RestoreState(const void *src, int srcSize)
 		NativeAudio_RefreshXADerivedStateNoLock();
 	}
 
-		NativeAudio_ClearOutputQueueNoLock();
+	NativeAudio_ClearOutputQueueNoLock();
 #if defined(__vita__)
-		NativeAudio_UpdateXAReadbackNoLock();
+	NativeAudio_UpdateXAReadbackNoLock();
 #endif
 
-		NativeAudio_UnlockOutput();
+	NativeAudio_UnlockOutput();
 	NativeAudio_XaPreparedStreamClose(&xaPrepared);
 
 	return 1;
@@ -3852,16 +3852,16 @@ internal void NativeAudio_MixFrame(s16 *outLeft, s16 *outRight)
 				continue;
 			}
 
-				sample = NativeAudio_InterpolateVoiceSample(voice);
-				sample = NativeAudio_ApplyAdsrEnvelope(sample, voice->adsrLevel);
-				left = NativeAudio_ApplyCachedMixGain(sample, voice->mixGainLeft);
-				right = NativeAudio_ApplyCachedMixGain(sample, voice->mixGainRight);
-				NativeAudio_MixSample(&mixLeft, &mixRight, left, right);
-				if (voice->reverb)
-				{
-					NativeAudio_MixSample(&reverbSendLeft, &reverbSendRight, NativeAudio_ApplyCachedReverbGain(sample, voice->reverbGainLeft),
-					                      NativeAudio_ApplyCachedReverbGain(sample, voice->reverbGainRight));
-				}
+			sample = NativeAudio_InterpolateVoiceSample(voice);
+			sample = NativeAudio_ApplyAdsrEnvelope(sample, voice->adsrLevel);
+			left = NativeAudio_ApplyCachedMixGain(sample, voice->mixGainLeft);
+			right = NativeAudio_ApplyCachedMixGain(sample, voice->mixGainRight);
+			NativeAudio_MixSample(&mixLeft, &mixRight, left, right);
+			if (voice->reverb)
+			{
+				NativeAudio_MixSample(&reverbSendLeft, &reverbSendRight, NativeAudio_ApplyCachedReverbGain(sample, voice->reverbGainLeft),
+				                      NativeAudio_ApplyCachedReverbGain(sample, voice->reverbGainRight));
+			}
 			NativeAudio_AdsrAdvance(voice);
 
 			// counter += pitch clamped to 4000h; crossing 28 samples decodes
@@ -4054,43 +4054,43 @@ internal int NativeAudio_OpenDevice(void)
 		return 0;
 	}
 
-		printf("[CTR Native] SDL audio stream opened: driver=%s src=%d Hz/%d ch dst=%d Hz/%d ch device=%d Hz/%d ch sampleFrames=%d\n", SDL_GetCurrentAudioDriver(),
-		       srcSpec.freq, srcSpec.channels, dstSpec.freq, dstSpec.channels, deviceSpec.freq, deviceSpec.channels, deviceSampleFrames);
+	printf("[CTR Native] SDL audio stream opened: driver=%s src=%d Hz/%d ch dst=%d Hz/%d ch device=%d Hz/%d ch sampleFrames=%d\n", SDL_GetCurrentAudioDriver(),
+	       srcSpec.freq, srcSpec.channels, dstSpec.freq, dstSpec.channels, deviceSpec.freq, deviceSpec.channels, deviceSampleFrames);
 #if defined(__vita__)
+	if (s_audio.output.commandMutex == NULL)
+	{
+		s_audio.output.commandMutex = SDL_CreateMutex();
 		if (s_audio.output.commandMutex == NULL)
 		{
-			s_audio.output.commandMutex = SDL_CreateMutex();
-			if (s_audio.output.commandMutex == NULL)
-			{
-				fprintf(stderr, "[CTR Native] audio command mutex unavailable: %s\n", SDL_GetError());
-				SDL_DestroyAudioStream(s_audio.output.stream);
-				s_audio.output.stream = NULL;
-				s_audio.output.device = 0;
-				return 0;
-			}
-		}
-		s_audio.output.commandRead = 0;
-		s_audio.output.commandCount = 0;
-		SDL_SetAtomicInt(&s_audio.output.xaPlayingSnapshot, 0);
-		SDL_SetAtomicInt(&s_audio.output.xaCurrOffsetSnapshot, 0);
-		SDL_SetAtomicInt(&s_audio.output.xaSampleRateSnapshot, 0);
-		SDL_SetAtomicInt(&s_audio.output.xaDecodedFramesSnapshot, 0);
-		SDL_SetAtomicInt(&s_audio.output.xaSourceFrameSnapshot, 0);
-		NativeAudio_InvalidateXAMaxSampleCacheNoLock();
-#endif
-		NativeAudio_ClearOutputQueueNoLock();
-		if (!SDL_ResumeAudioStreamDevice(s_audio.output.stream))
-		{
-			fprintf(stderr, "[CTR Native] SDL audio stream resume failed: %s\n", SDL_GetError());
+			fprintf(stderr, "[CTR Native] audio command mutex unavailable: %s\n", SDL_GetError());
 			SDL_DestroyAudioStream(s_audio.output.stream);
 			s_audio.output.stream = NULL;
 			s_audio.output.device = 0;
-#if defined(__vita__)
-			SDL_DestroyMutex(s_audio.output.commandMutex);
-			s_audio.output.commandMutex = NULL;
-#endif
 			return 0;
 		}
+	}
+	s_audio.output.commandRead = 0;
+	s_audio.output.commandCount = 0;
+	SDL_SetAtomicInt(&s_audio.output.xaPlayingSnapshot, 0);
+	SDL_SetAtomicInt(&s_audio.output.xaCurrOffsetSnapshot, 0);
+	SDL_SetAtomicInt(&s_audio.output.xaSampleRateSnapshot, 0);
+	SDL_SetAtomicInt(&s_audio.output.xaDecodedFramesSnapshot, 0);
+	SDL_SetAtomicInt(&s_audio.output.xaSourceFrameSnapshot, 0);
+	NativeAudio_InvalidateXAMaxSampleCacheNoLock();
+#endif
+	NativeAudio_ClearOutputQueueNoLock();
+	if (!SDL_ResumeAudioStreamDevice(s_audio.output.stream))
+	{
+		fprintf(stderr, "[CTR Native] SDL audio stream resume failed: %s\n", SDL_GetError());
+		SDL_DestroyAudioStream(s_audio.output.stream);
+		s_audio.output.stream = NULL;
+		s_audio.output.device = 0;
+#if defined(__vita__)
+		SDL_DestroyMutex(s_audio.output.commandMutex);
+		s_audio.output.commandMutex = NULL;
+#endif
+		return 0;
+	}
 
 	return 1;
 }
@@ -4305,13 +4305,13 @@ internal void NativeAudio_SpuSetVoiceAttrNoLock(const SpuVoiceAttr *psxAttrib)
 			voice->attr.adsr2 = psxAttrib->adsr2;
 		}
 		NativeAudio_DecodePackedAdsrToFields(voice, (psxAttrib->mask & SPU_VOICE_ADSR_ADSR1) != 0, (psxAttrib->mask & SPU_VOICE_ADSR_ADSR2) != 0);
-			if (psxAttrib->mask & (SPU_VOICE_ADSR_AR | SPU_VOICE_ADSR_DR | SPU_VOICE_ADSR_SR | SPU_VOICE_ADSR_RR | SPU_VOICE_ADSR_SL | SPU_VOICE_ADSR_AMODE |
-			                       SPU_VOICE_ADSR_SMODE | SPU_VOICE_ADSR_RMODE | SPU_VOICE_ADSR_ADSR1 | SPU_VOICE_ADSR_ADSR2))
-			{
-				NativeAudio_UpdatePackedAdsrFromFields(voice);
-			}
-			NativeAudio_RefreshVoiceGainsNoLock(voice);
+		if (psxAttrib->mask & (SPU_VOICE_ADSR_AR | SPU_VOICE_ADSR_DR | SPU_VOICE_ADSR_SR | SPU_VOICE_ADSR_RR | SPU_VOICE_ADSR_SL | SPU_VOICE_ADSR_AMODE |
+		                       SPU_VOICE_ADSR_SMODE | SPU_VOICE_ADSR_RMODE | SPU_VOICE_ADSR_ADSR1 | SPU_VOICE_ADSR_ADSR2))
+		{
+			NativeAudio_UpdatePackedAdsrFromFields(voice);
 		}
+		NativeAudio_RefreshVoiceGainsNoLock(voice);
+	}
 
 }
 

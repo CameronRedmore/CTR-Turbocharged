@@ -1247,17 +1247,17 @@ void MM_Characters_DrawWindows(b32 boolShowDrivers)
 		idpp[playerIndex].pushBuffer = pb;
 
 		s16 *currCharacterID = &D230.characterSelectPlayerState.currentCharacterID[playerIndex];
-	#if defined(CTR_NATIVE)
+#if defined(CTR_NATIVE)
 		const s16 desiredCustomPreview = (s16)NativeCustomRacer_GetPlayerSelection(playerIndex);
-	#endif
+#endif
 
 #if defined(CTR_NATIVE)
-			int showWheels = (*currCharacterID != NITROS_OXIDE);
-			if (desiredCustomPreview >= 0)
-			{
-				showWheels = NativeCustomRacer_GetWheelsEnabled(desiredCustomPreview, showWheels);
-			}
-			gGT->drivers[playerIndex]->wheelSize = showWheels ? MM_CHARACTER_SELECT_WHEEL_SIZE : 0;
+		int showWheels = (*currCharacterID != NITROS_OXIDE);
+		if (desiredCustomPreview >= 0)
+		{
+			showWheels = NativeCustomRacer_GetWheelsEnabled(desiredCustomPreview, showWheels);
+		}
+		gGT->drivers[playerIndex]->wheelSize = showWheels ? MM_CHARACTER_SELECT_WHEEL_SIZE : 0;
 #endif
 
 		driverInst->animFrame = 0;
@@ -1437,7 +1437,7 @@ void MM_Characters_SetMenuLayout(void)
 	{
 		s_nativeCharacterSelectPage = 0;
 		NativeCustomRacer_ClearPlayerSelections();
-	D230.activeCharacterSelectMeta = MM_Characters_GetOxideMetaForLayout(layoutIndex);
+		D230.activeCharacterSelectMeta = MM_Characters_GetOxideMetaForLayout(layoutIndex);
 	}
 #else
 	D230.activeCharacterSelectMeta = D230.characterSelectMetaByLayout[layoutIndex];
@@ -2144,10 +2144,10 @@ dontDrawSelectCharacter:
 	// loop through character icons
 	for (s32 iconIndex = 0; iconIndex < activeIconCount; iconIndex++)
 	{
-	#if defined(CTR_NATIVE)
+#if defined(CTR_NATIVE)
 		if (MM_Characters_NativeCustomRosterEnabled() && !MM_Characters_NativeSlotAvailable(iconIndex))
 			continue;
-	#endif
+#endif
 		struct CharacterSelectMeta *drawMeta = &iconDrawMeta[iconIndex];
 		s16 unlockRequirement = drawMeta->unlockFlags;
 		if (
@@ -2322,10 +2322,10 @@ dontDrawSelectCharacter:
 	// loop through all icons
 	for (s32 iconIndex = 0; iconIndex < activeIconCount; iconIndex++)
 	{
-	#if defined(CTR_NATIVE)
+#if defined(CTR_NATIVE)
 		if (MM_Characters_NativeCustomRosterEnabled() && !MM_Characters_NativeSlotAvailable(iconIndex))
 			continue;
-	#endif
+#endif
 		s16 unlockRequirement = activeCharacterSelectMeta[iconIndex].unlockFlags;
 
 		if (

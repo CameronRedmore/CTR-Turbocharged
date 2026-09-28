@@ -468,8 +468,8 @@ internal int NativeRenderer_InitialiseGLContext(char *windowName, int fullscreen
 
 internal int NativeRenderer_InitialiseGLExt(void)
 {
-	#if !defined(__vita__) && !defined(__EMSCRIPTEN__)
-		GLenum err = gladLoadGL();
+#if !defined(__vita__) && !defined(__EMSCRIPTEN__)
+	GLenum err = gladLoadGL();
 
 	if (err == 0)
 	{
@@ -1557,7 +1557,7 @@ internal ShaderID NativeRenderer_Shader_Compile(const char *source, bool isPsxSh
 	                               "\t#define gl_FragColor fragColor\n"
 #endif
 #endif
-								   ;
+	                               ;
 
 	char extra_vs_defines[1024];
 	char extra_fs_defines[1024];
@@ -1895,9 +1895,9 @@ global_variable const char *ctr_present_rgba_shader = "#ifdef VERTEX\n"
                                                        "#ifdef FRAGMENT\n"
                                                        "varying vec2 v_uv;\n"
                                                        "uniform sampler2D s_src;\n"
-	                                                   "uniform float flipY;\n"
+                                                       "uniform float flipY;\n"
                                                        "void main() {\n"
-	                                                   "    gl_FragColor = texture2D(s_src, vec2(v_uv.x, mix(v_uv.y, 1.0 - v_uv.y, flipY)));\n"
+                                                       "    gl_FragColor = texture2D(s_src, vec2(v_uv.x, mix(v_uv.y, 1.0 - v_uv.y, flipY)));\n"
                                                        "}\n"
                                                        "#endif\n";
 #else

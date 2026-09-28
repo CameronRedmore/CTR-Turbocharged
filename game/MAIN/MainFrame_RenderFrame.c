@@ -223,13 +223,13 @@ void MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem *gGamep
 			}
 
 #if defined(CTR_NATIVE)
-		// NOTE(aalhendi): Native menu/adventure-hub LEVs may publish no
-		// restart table. Retail lap stats assume the table exists whenever
-		// this caller reaches them; keep the ASM-verified lap function intact.
-		if ((gGT->level1 != NULL) && (gGT->level1->ptr_restart_points != NULL) && (gGT->level1->cnt_restart_points != 0))
-		{
-			PlayLevel_UpdateLapStats();
-		}
+			// NOTE(aalhendi): Native menu/adventure-hub LEVs may publish no
+			// restart table. Retail lap stats assume the table exists whenever
+			// this caller reaches them; keep the ASM-verified lap function intact.
+			if ((gGT->level1 != NULL) && (gGT->level1->ptr_restart_points != NULL) && (gGT->level1->cnt_restart_points != 0))
+			{
+				PlayLevel_UpdateLapStats();
+			}
 #else
 			PlayLevel_UpdateLapStats();
 #endif
@@ -299,9 +299,9 @@ void MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem *gGamep
 	RenderFMV();
 #endif
 
-		RenderSubmit(gGT);
+	RenderSubmit(gGT);
 #if defined(__vita__)
-		NativeAdhoc_EndRenderFrame();
+	NativeAdhoc_EndRenderFrame();
 #endif
 }
 
@@ -925,18 +925,18 @@ void RenderAllFlag0x40(struct GameTracker *gGT)
 
 	VehTurbo_ProcessBucket(gGT->threadBuckets[TURBO].thread);
 
-		int i;
-		struct PushBuffer *pb;
+	int i;
+	struct PushBuffer *pb;
 #if defined(__vita__)
-		if (NativeAdhoc_IsSingleViewRenderActive())
-		{
-			pb = NativeAdhoc_GetRenderPushBuffer();
-			VehGroundSkids_Main(gGT->threadBuckets[PLAYER].thread, pb);
-			VehGroundSkids_Main(gGT->threadBuckets[ROBOT].thread, pb);
-			return;
-		}
+	if (NativeAdhoc_IsSingleViewRenderActive())
+	{
+		pb = NativeAdhoc_GetRenderPushBuffer();
+		VehGroundSkids_Main(gGT->threadBuckets[PLAYER].thread, pb);
+		VehGroundSkids_Main(gGT->threadBuckets[ROBOT].thread, pb);
+		return;
+	}
 #endif
-		for (i = 0; i < gGT->numPlyrCurrGame; i++)
+	for (i = 0; i < gGT->numPlyrCurrGame; i++)
 	{
 		pb = &gGT->pushBuffer[i];
 		VehGroundSkids_Main(gGT->threadBuckets[PLAYER].thread, pb);
