@@ -17,16 +17,16 @@ enum
 static DriverModelExtraSlot s_nativeAIRandomizerModels[NATIVE_AI_RANDOMIZER_DRIVER_COUNT];
 static void *s_nativeAIRandomizer2PBuffers[NATIVE_AI_RANDOMIZER_2P_AI_COUNT];
 static struct Model *s_nativeAIRandomizer2PModels[NATIVE_AI_RANDOMIZER_2P_AI_COUNT];
-extern int gNativeCustomAIRacersEnabled;
+extern int gNativeAIRacersMode;
 
 static b32 NativeAIRandomizer_ShouldUse(const struct GameTracker *gGT)
 {
-	if ((gGT == NULL) || (gNativeBossFightMode != 0) || (gGT->boolDemoMode != 0))
+	if (gNativeAIRacersMode == NATIVE_AI_RACERS_RETAIL)
 	{
 		return false;
 	}
 
-	if ((NativeCustomRacer_GetPlayerSelection(0) >= 0) && (gNativeCustomAIRacersEnabled == 0))
+	if ((gGT == NULL) || (gNativeBossFightMode != 0) || (gGT->boolDemoMode != 0))
 	{
 		return false;
 	}
@@ -113,7 +113,8 @@ static void NativeAIRandomizer_SetCharacters(struct GameTracker *gGT, int firstA
 
 	NativeAIRandomizer_ClearCustomAISelections(firstAI);
 	u32 state = NativeAIRandomizer_Seed(gGT, firstAI);
-	const int customCount = gNativeCustomAIRacersEnabled ? NativeCustomRacer_GetCount() : 0;
+	const int customCount =
+	    (gNativeAIRacersMode == NATIVE_AI_RACERS_EXTENDED_CUSTOM) ? NativeCustomRacer_GetCount() : 0;
 	const int candidateCount = NATIVE_AI_RANDOMIZER_CHARACTER_COUNT + customCount;
 	for (int driverIndex = firstAI; driverIndex < driverCount; driverIndex++)
 	{

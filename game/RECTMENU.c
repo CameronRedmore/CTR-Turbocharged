@@ -6,7 +6,7 @@ extern int gNativeMirrorModeEnabled;
 extern int gNative60FpsEnabled;
 extern int gNativeDefaultCameraFar;
 extern int gNativeDefaultHudSpeedometer;
-extern int gNativeCustomAIRacersEnabled;
+extern int gNativeAIRacersMode;
 extern u32 gNativeCheatConfigMask;
 #ifndef __vita__
 extern int gNativeAntiAliasingEnabled;
@@ -60,14 +60,14 @@ static char *RECTMENU_GetString(s16 stringIndex)
 		{"HUD: MINIMAPA", "HUD: VELOCIMETRO"},
 		{"HUD: MINIKAART", "HUD: SNELHEID"},
 	};
-	static const char *customAIRacers[6][2] =
+	static const char *aiRacers[6][NATIVE_AI_RACERS_MODE_COUNT] =
 	{
-		{"CUSTOM RACERS FOR AI: OFF", "CUSTOM RACERS FOR AI: ON"},
-		{"PILOTES CUSTOM IA: NON", "PILOTES CUSTOM IA: OUI"},
-		{"CUSTOM-FAHRER KI: AUS", "CUSTOM-FAHRER KI: EIN"},
-		{"PILOTI CUSTOM IA: NO", "PILOTI CUSTOM IA: SI"},
-		{"PILOTOS CUSTOM IA: NO", "PILOTOS CUSTOM IA: SI"},
-		{"CUSTOM RACERS AI: UIT", "CUSTOM RACERS AI: AAN"},
+		{"AI RACERS: RETAIL", "AI RACERS: EXTENDED", "AI RACERS: EXTENDED+CUSTOM"},
+		{"PILOTES IA: RETAIL", "PILOTES IA: EXTENDED", "PILOTES IA: EXTENDED+CUSTOM"},
+		{"KI-FAHRER: RETAIL", "KI-FAHRER: EXTENDED", "KI-FAHRER: EXTENDED+CUSTOM"},
+		{"PILOTI IA: RETAIL", "PILOTI IA: EXTENDED", "PILOTI IA: EXTENDED+CUSTOM"},
+		{"PILOTOS IA: RETAIL", "PILOTOS IA: EXTENDED", "PILOTOS IA: EXTENDED+CUSTOM"},
+		{"AI RACERS: RETAIL", "AI RACERS: EXTENDED", "AI RACERS: EXTENDED+CUSTOM"},
 	};
 #ifndef __vita__
 	static const char *antiAliasing[2] =
@@ -338,8 +338,8 @@ static char *RECTMENU_GetString(s16 stringIndex)
 		return (char *)defaultCamera[languageRow][gNativeDefaultCameraFar != 0];
 	case NATIVE_MENU_STRING_DEFAULT_HUD:
 		return (char *)defaultHud[languageRow][gNativeDefaultHudSpeedometer != 0];
-	case NATIVE_MENU_STRING_CUSTOM_AI_RACERS:
-		return (char *)customAIRacers[languageRow][gNativeCustomAIRacersEnabled != 0];
+	case NATIVE_MENU_STRING_AI_RACERS:
+		return (char *)aiRacers[languageRow][gNativeAIRacersMode];
 	case NATIVE_MENU_STRING_CONTROLS:
 		return (char *)controlsTitle[languageRow];
 	case NATIVE_MENU_STRING_CHEATS:
@@ -767,8 +767,9 @@ static b32 RECTMENU_NativeOptionsHorizontalInput(struct RectMenu *menu)
 	}
 
 	s16 stringIndex = menu->rows[menu->rowSelected].stringIndex & MENU_ROW_LNG_MASK;
-	return (stringIndex >= NATIVE_MENU_STRING_AUDIO_FX) &&
-	       (stringIndex <= NATIVE_MENU_STRING_AUDIO_MODE);
+	return ((stringIndex >= NATIVE_MENU_STRING_AUDIO_FX) &&
+	        (stringIndex <= NATIVE_MENU_STRING_AUDIO_MODE)) ||
+	       (stringIndex == NATIVE_MENU_STRING_AI_RACERS);
 }
 #endif
 

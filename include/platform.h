@@ -34,6 +34,14 @@ void Platform_SetBorderless(int enabled);
 #endif
 
 #if defined(CTR_NATIVE)
+enum NativeAIRacersMode
+{
+	NATIVE_AI_RACERS_RETAIL = 0,
+	NATIVE_AI_RACERS_EXTENDED,
+	NATIVE_AI_RACERS_EXTENDED_CUSTOM,
+	NATIVE_AI_RACERS_MODE_COUNT,
+};
+
 int NikoGetEnterKey(void);
 #endif
 

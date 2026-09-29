@@ -226,7 +226,7 @@ static struct MenuRow s_nativeOptionsRows[] =
 	{NATIVE_MENU_STRING_FRAME_RATE, 6, 8, 7, 7},
 	{NATIVE_MENU_STRING_DEFAULT_CAMERA, 7, 9, 8, 8},
 	{NATIVE_MENU_STRING_DEFAULT_HUD, 8, 10, 9, 9},
-	{NATIVE_MENU_STRING_CUSTOM_AI_RACERS, 9, 11, 10, 10},
+	{NATIVE_MENU_STRING_AI_RACERS, 9, 11, 10, 10},
 	{NATIVE_MENU_STRING_MIRROR_MODE, 10, 0, 11, 11},
 #else
 	{LNG_LANGUAGE, 14, 1, 0, 0},
@@ -242,7 +242,7 @@ static struct MenuRow s_nativeOptionsRows[] =
 	{NATIVE_MENU_STRING_BORDERLESS, 9, 11, 10, 10},
 	{NATIVE_MENU_STRING_DEFAULT_CAMERA, 10, 12, 11, 11},
 	{NATIVE_MENU_STRING_DEFAULT_HUD, 11, 13, 12, 12},
-	{NATIVE_MENU_STRING_CUSTOM_AI_RACERS, 12, 14, 13, 13},
+	{NATIVE_MENU_STRING_AI_RACERS, 12, 14, 13, 13},
 	{NATIVE_MENU_STRING_MIRROR_MODE, 13, 0, 14, 14},
 #endif
 	{RECTMENU_STRING_NONE},
@@ -393,7 +393,7 @@ extern int gNativeMirrorModeEnabled;
 extern int gNative60FpsEnabled;
 extern int gNativeDefaultCameraFar;
 extern int gNativeDefaultHudSpeedometer;
-extern int gNativeCustomAIRacersEnabled;
+extern int gNativeAIRacersMode;
 extern u32 gNativeCheatConfigMask;
 #ifndef __vita__
 extern int gNativeAntiAliasingEnabled;
@@ -924,9 +924,29 @@ static void MM_NativeOptionsMenuProc(struct RectMenu *menu)
 		return;
 	}
 
-	if (choose == NATIVE_MENU_STRING_CUSTOM_AI_RACERS)
+	if (choose == NATIVE_MENU_STRING_AI_RACERS)
 	{
-		gNativeCustomAIRacersEnabled ^= 1;
+		if (button & BTN_LEFT)
+		{
+			gNativeAIRacersMode--;
+			if (gNativeAIRacersMode < NATIVE_AI_RACERS_RETAIL)
+			{
+				gNativeAIRacersMode = NATIVE_AI_RACERS_EXTENDED_CUSTOM;
+			}
+			OtherFX_Play(0, 1);
+		}
+		else
+		{
+			gNativeAIRacersMode++;
+			if (gNativeAIRacersMode >= NATIVE_AI_RACERS_MODE_COUNT)
+			{
+				gNativeAIRacersMode = NATIVE_AI_RACERS_RETAIL;
+			}
+			if (button & BTN_RIGHT)
+			{
+				OtherFX_Play(0, 1);
+			}
+		}
 		save_config();
 		return;
 	}
