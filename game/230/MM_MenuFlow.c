@@ -317,7 +317,7 @@ static struct RectMenu s_nativeLanguageBootMenu =
 static struct RectMenu s_nativeLanguageMainMenu =
 {
 	.stringIndexTitle = RECTMENU_STRING_NONE,
-	.state = CENTER_ON_X,
+	.state = CENTER_ON_X | USE_SMALL_FONT,
 	.rows = s_nativeLanguageRows,
 	.funcPtr = MM_NativeLanguageMainMenuProc,
 };
