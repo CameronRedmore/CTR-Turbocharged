@@ -255,6 +255,7 @@ static char *RECTMENU_GetString(s16 stringIndex)
 	};
 	static char controlRow[128];
 	static char controlHeaderRow[128];
+	static char audioRow[64];
 
 	int languageRow = 0;
 	if ((cfg_language >= 2) && (cfg_language <= 7))
@@ -319,12 +320,26 @@ static char *RECTMENU_GetString(s16 stringIndex)
 		return (char *)mirrorMode[languageRow][gNativeMirrorModeEnabled != 0];
 	case NATIVE_MENU_STRING_FRAME_RATE:
 		return (char *)frameRate[gNative60FpsEnabled != 0];
+	case NATIVE_MENU_STRING_AUDIO_FX:
+	case NATIVE_MENU_STRING_AUDIO_MUSIC:
+	case NATIVE_MENU_STRING_AUDIO_VOICE:
+	{
+		int volumeType = nativeStringIndex - NATIVE_MENU_STRING_AUDIO_FX;
+		static const s16 volumeLabel[3] = {LNG_FX, LNG_MUSIC, LNG_VOICE};
+		int percent = ((howl_VolumeGet(volumeType) & 0xff) * 100 + 127) / 255;
+		snprintf(audioRow, sizeof(audioRow), "%s %d%%", sdata->lngStrings[volumeLabel[volumeType]], percent);
+		return audioRow;
+	}
+	case NATIVE_MENU_STRING_AUDIO_MODE:
+		snprintf(audioRow, sizeof(audioRow), "%s %s", sdata->lngStrings[LNG_MODE],
+		         sdata->lngStrings[howl_ModeGet() ? LNG_STEREO : LNG_MONO]);
+		return audioRow;
 	case NATIVE_MENU_STRING_DEFAULT_CAMERA:
 		return (char *)defaultCamera[languageRow][gNativeDefaultCameraFar != 0];
-		case NATIVE_MENU_STRING_DEFAULT_HUD:
-			return (char *)defaultHud[languageRow][gNativeDefaultHudSpeedometer != 0];
-		case NATIVE_MENU_STRING_CUSTOM_AI_RACERS:
-			return (char *)customAIRacers[languageRow][gNativeCustomAIRacersEnabled != 0];
+	case NATIVE_MENU_STRING_DEFAULT_HUD:
+		return (char *)defaultHud[languageRow][gNativeDefaultHudSpeedometer != 0];
+	case NATIVE_MENU_STRING_CUSTOM_AI_RACERS:
+		return (char *)customAIRacers[languageRow][gNativeCustomAIRacersEnabled != 0];
 	case NATIVE_MENU_STRING_CONTROLS:
 		return (char *)controlsTitle[languageRow];
 	case NATIVE_MENU_STRING_CHEATS:
@@ -739,8 +754,21 @@ static b32 RECTMENU_NativeOptionsSeparatorBeforeRow(struct RectMenu *menu, struc
 	}
 
 	s16 stringIndex = row->stringIndex & MENU_ROW_LNG_MASK;
-	return stringIndex == NATIVE_MENU_STRING_FRAME_RATE ||
+	return stringIndex == NATIVE_MENU_STRING_AUDIO_FX ||
+	       stringIndex == NATIVE_MENU_STRING_FRAME_RATE ||
 	       stringIndex == NATIVE_MENU_STRING_DEFAULT_CAMERA;
+}
+
+static b32 RECTMENU_NativeOptionsHorizontalInput(struct RectMenu *menu)
+{
+	if ((menu->drawStyle & RECTMENU_DRAW_STYLE_NATIVE_OPTIONS) == 0)
+	{
+		return false;
+	}
+
+	s16 stringIndex = menu->rows[menu->rowSelected].stringIndex & MENU_ROW_LNG_MASK;
+	return (stringIndex >= NATIVE_MENU_STRING_AUDIO_FX) &&
+	       (stringIndex <= NATIVE_MENU_STRING_AUDIO_MODE);
 }
 #endif
 
@@ -1279,6 +1307,16 @@ int RECTMENU_ProcessInput(struct RectMenu *m)
 				OtherFX_Play(0, 1);
 			}
 		}
+
+#if defined(CTR_NATIVE)
+		if (((button & (BTN_LEFT | BTN_RIGHT)) != 0) &&
+		    RECTMENU_NativeOptionsHorizontalInput(m) &&
+		    (m->funcPtr != 0))
+		{
+			m->funcState = RECTMENU_FUNC_STATE_INPUT;
+			m->funcPtr(m);
+		}
+#endif
 
 		if ((button & (BTN_CROSS_one | BTN_CIRCLE)) == 0)
 		{

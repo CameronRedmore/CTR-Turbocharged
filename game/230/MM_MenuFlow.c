@@ -216,26 +216,34 @@ static struct MenuRow s_nativeTimeTrialRows[] =
 static struct MenuRow s_nativeOptionsRows[] =
 {
 #ifdef __vita__
-	{LNG_LANGUAGE, 7, 1, 0, 0},
+	{LNG_LANGUAGE, 11, 1, 0, 0},
 	{NATIVE_MENU_STRING_CONTROLS, 0, 2, 1, 1},
 	{NATIVE_MENU_STRING_CHEATS, 1, 3, 2, 2},
-	{NATIVE_MENU_STRING_FRAME_RATE, 2, 4, 3, 3},
-	{NATIVE_MENU_STRING_DEFAULT_CAMERA, 3, 5, 4, 4},
-	{NATIVE_MENU_STRING_DEFAULT_HUD, 4, 6, 5, 5},
-	{NATIVE_MENU_STRING_CUSTOM_AI_RACERS, 5, 7, 6, 6},
-	{NATIVE_MENU_STRING_MIRROR_MODE, 6, 0, 7, 7},
+	{NATIVE_MENU_STRING_AUDIO_FX, 2, 4, 3, 3},
+	{NATIVE_MENU_STRING_AUDIO_MUSIC, 3, 5, 4, 4},
+	{NATIVE_MENU_STRING_AUDIO_VOICE, 4, 6, 5, 5},
+	{NATIVE_MENU_STRING_AUDIO_MODE, 5, 7, 6, 6},
+	{NATIVE_MENU_STRING_FRAME_RATE, 6, 8, 7, 7},
+	{NATIVE_MENU_STRING_DEFAULT_CAMERA, 7, 9, 8, 8},
+	{NATIVE_MENU_STRING_DEFAULT_HUD, 8, 10, 9, 9},
+	{NATIVE_MENU_STRING_CUSTOM_AI_RACERS, 9, 11, 10, 10},
+	{NATIVE_MENU_STRING_MIRROR_MODE, 10, 0, 11, 11},
 #else
-	{LNG_LANGUAGE, 10, 1, 0, 0},
+	{LNG_LANGUAGE, 14, 1, 0, 0},
 	{NATIVE_MENU_STRING_CONTROLS, 0, 2, 1, 1},
 	{NATIVE_MENU_STRING_CHEATS, 1, 3, 2, 2},
-	{NATIVE_MENU_STRING_FRAME_RATE, 2, 4, 3, 3},
-	{NATIVE_MENU_STRING_ANTI_ALIASING, 3, 5, 4, 4},
-	{NATIVE_MENU_STRING_DITHERING, 4, 6, 5, 5},
-	{NATIVE_MENU_STRING_BORDERLESS, 5, 7, 6, 6},
-	{NATIVE_MENU_STRING_DEFAULT_CAMERA, 6, 8, 7, 7},
-	{NATIVE_MENU_STRING_DEFAULT_HUD, 7, 9, 8, 8},
-	{NATIVE_MENU_STRING_CUSTOM_AI_RACERS, 8, 10, 9, 9},
-	{NATIVE_MENU_STRING_MIRROR_MODE, 9, 0, 10, 10},
+	{NATIVE_MENU_STRING_AUDIO_FX, 2, 4, 3, 3},
+	{NATIVE_MENU_STRING_AUDIO_MUSIC, 3, 5, 4, 4},
+	{NATIVE_MENU_STRING_AUDIO_VOICE, 4, 6, 5, 5},
+	{NATIVE_MENU_STRING_AUDIO_MODE, 5, 7, 6, 6},
+	{NATIVE_MENU_STRING_FRAME_RATE, 6, 8, 7, 7},
+	{NATIVE_MENU_STRING_ANTI_ALIASING, 7, 9, 8, 8},
+	{NATIVE_MENU_STRING_DITHERING, 8, 10, 9, 9},
+	{NATIVE_MENU_STRING_BORDERLESS, 9, 11, 10, 10},
+	{NATIVE_MENU_STRING_DEFAULT_CAMERA, 10, 12, 11, 11},
+	{NATIVE_MENU_STRING_DEFAULT_HUD, 11, 13, 12, 12},
+	{NATIVE_MENU_STRING_CUSTOM_AI_RACERS, 12, 14, 13, 13},
+	{NATIVE_MENU_STRING_MIRROR_MODE, 13, 0, 14, 14},
 #endif
 	{RECTMENU_STRING_NONE},
 };
@@ -335,7 +343,7 @@ static struct RectMenu s_nativeTimeTrialMenu =
 
 static struct RectMenu s_nativeOptionsMenu =
 {
-	.stringIndexTitle = LNG_OPTIONS,
+	.stringIndexTitle = RECTMENU_STRING_NONE,
 	.state = CENTER_ON_X | USE_SMALL_FONT | BIG_TEXT_IN_TITLE,
 	.rows = s_nativeOptionsRows,
 	.funcPtr = MM_NativeOptionsMenuProc,
@@ -796,7 +804,7 @@ static void MM_NativeOptionsMenuProc(struct RectMenu *menu)
 {
 	if (menu->funcState == RECTMENU_FUNC_STATE_UPDATE)
 	{
-			return;
+		return;
 	}
 
 	if (menu->funcState != RECTMENU_FUNC_STATE_INPUT)
@@ -815,6 +823,39 @@ static void MM_NativeOptionsMenuProc(struct RectMenu *menu)
 	}
 
 	s16 choose = menu->rows[menu->rowSelected].stringIndex & MENU_ROW_LNG_MASK;
+	u32 button = sdata->buttonTapPerPlayer[0];
+
+	if ((choose >= NATIVE_MENU_STRING_AUDIO_FX) && (choose <= NATIVE_MENU_STRING_AUDIO_VOICE))
+	{
+		if ((button & (BTN_LEFT | BTN_RIGHT)) != 0)
+		{
+			int volumeType = choose - NATIVE_MENU_STRING_AUDIO_FX;
+			int volume = howl_VolumeGet(volumeType) & 0xff;
+			volume += (button & BTN_LEFT) ? -16 : 16;
+			if (volume < 0) volume = 0;
+			if (volume > 0xff) volume = 0xff;
+			howl_VolumeSet(volumeType, (u8)volume);
+			OtherFX_Play(0, 1);
+		}
+		return;
+	}
+
+	if (choose == NATIVE_MENU_STRING_AUDIO_MODE)
+	{
+		if (button & BTN_LEFT)
+		{
+			howl_ModeSet(0);
+		}
+		else if (button & BTN_RIGHT)
+		{
+			howl_ModeSet(1);
+		}
+		else
+		{
+			howl_ModeSet(howl_ModeGet() == 0);
+		}
+		return;
+	}
 
 	if (choose == LNG_LANGUAGE)
 	{
