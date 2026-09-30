@@ -1,5 +1,27 @@
 #include <common.h>
 
+#if defined(CTR_NATIVE)
+enum
+{
+	NATIVE_VOICELINE_POOL_COUNT = 8,
+};
+
+global_variable s8 s_nativeVoicelineRequestDriverID = -1;
+global_variable s8 s_nativeVoicelineDriverID[NATIVE_VOICELINE_POOL_COUNT] = {-1, -1, -1, -1, -1, -1, -1, -1};
+
+internal int Voiceline_NativePoolIndex(const struct VoicelineItem *voiceLine)
+{
+	for (int i = 0; i < NATIVE_VOICELINE_POOL_COUNT; i++)
+	{
+		if (voiceLine == &sdata->voicelinePool[i])
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+#endif
+
 // does not really touch voiceline
 // NOTE(aalhendi): ASM-verified NTSC-U 926 0x8002c918-0x8002caa8
 void Voiceline_PoolInit(void)
@@ -98,6 +120,14 @@ void Voiceline_PoolClear(void)
 	// put them all on free list
 	LIST_Init(&sdata->Voiceline1, &sdata->voicelinePool[0].item, sizeof(struct VoicelineItem), 8);
 
+#if defined(CTR_NATIVE)
+	s_nativeVoicelineRequestDriverID = -1;
+	for (s32 i = 0; i < NATIVE_VOICELINE_POOL_COUNT; i++)
+	{
+		s_nativeVoicelineDriverID[i] = -1;
+	}
+#endif
+
 	Voiceline_ClearTimeStamp();
 }
 
@@ -137,11 +167,13 @@ void Voiceline_RequestPlayDriver(u32 voiceID, int driverID, u32 characterID2)
 	if ((driverID < 0) || (driverID >= LOAD_CHARACTER_ID_COUNT))
 		return;
 #if defined(CTR_NATIVE)
+	s_nativeVoicelineRequestDriverID = (s8)driverID;
 	NativeCustomRacer_SetActiveVoiceDriver(driverID);
 #endif
 	Voiceline_RequestPlay(voiceID, data.characterIDs[driverID], characterID2);
 #if defined(CTR_NATIVE)
 	NativeCustomRacer_SetActiveVoiceDriver(-1);
+	s_nativeVoicelineRequestDriverID = -1;
 #endif
 }
 
@@ -278,6 +310,13 @@ queueVoiceline:
 
 		if ((voiceID == (u32)voiceLine->voiceID) && (characterID == voiceLine->characterID))
 		{
+#if defined(CTR_NATIVE)
+			const int poolIndex = Voiceline_NativePoolIndex(voiceLine);
+			if ((poolIndex >= 0) && (s_nativeVoicelineDriverID[poolIndex] != s_nativeVoicelineRequestDriverID))
+			{
+				continue;
+			}
+#endif
 			return;
 		}
 	}
@@ -305,6 +344,13 @@ queueVoiceline:
 		voiceLine->secondaryCharacterID = characterID2;
 		voiceLine->voiceID = voiceID;
 		voiceLine->startFrame = sdata->gGT->timer;
+#if defined(CTR_NATIVE)
+		const int poolIndex = Voiceline_NativePoolIndex(voiceLine);
+		if (poolIndex >= 0)
+		{
+			s_nativeVoicelineDriverID[poolIndex] = s_nativeVoicelineRequestDriverID;
+		}
+#endif
 	}
 }
 
@@ -355,13 +401,17 @@ void Voiceline_StartPlay(struct Item *voiceLine)
 	u32 xaID = (u16)voiceIDs[voiceIndex];
 
 #if defined(CTR_NATIVE)
+	const int poolIndex = Voiceline_NativePoolIndex(voiceLineItem);
+	const int voiceDriverID = (poolIndex >= 0) ? s_nativeVoicelineDriverID[poolIndex] : -1;
 	NativeCustomRacer_SetVoiceOverrideBlocked(isBossVoice);
+	NativeCustomRacer_SetActiveVoiceDriver(isBossVoice ? -1 : voiceDriverID);
 	NativeCustomRacer_SetActiveVoiceCharacter(isBossVoice ? -1 : (int)characterID);
 #endif
 	if (CDSYS_XAPlay(CDSYS_XA_TYPE_GAME, xaID) == 0)
 	{
 #if defined(CTR_NATIVE)
 		NativeCustomRacer_SetActiveVoiceCharacter(-1);
+		NativeCustomRacer_SetActiveVoiceDriver(-1);
 		NativeCustomRacer_SetVoiceOverrideBlocked(0);
 #endif
 		sdata->voicelineCooldown = 0x1e;
@@ -371,6 +421,7 @@ void Voiceline_StartPlay(struct Item *voiceLine)
 	sdata->voicelineCooldown = (s16)(CDSYS_XAGetTrackLength(CDSYS_XA_TYPE_GAME, xaID) / 5) + 0x1e;
 #if defined(CTR_NATIVE)
 	NativeCustomRacer_SetActiveVoiceCharacter(-1);
+	NativeCustomRacer_SetActiveVoiceDriver(-1);
 	NativeCustomRacer_SetVoiceOverrideBlocked(0);
 #endif
 }

@@ -1288,15 +1288,32 @@ int NativeCustomRacer_GetActiveVoiceRacerIndex(void)
 	}
 	else if (s_nativeCustomRacerVoiceCharacterID >= 0)
 	{
+		int retailDriverUsesCharacter = 0;
 		for (int driverIndex = 0; driverIndex < LOAD_CHARACTER_ID_COUNT; driverIndex++)
 		{
-			const int selected = NativeCustomRacer_GetDriverSelection(driverIndex);
-			if ((selected >= 0) &&
-			    (NativeCustomRacer_GetTemplateCharacterID(selected) == s_nativeCustomRacerVoiceCharacterID))
+			if (data.characterIDs[driverIndex] != s_nativeCustomRacerVoiceCharacterID)
 			{
-				racerIndex = selected;
-				break;
+				continue;
 			}
+
+			const int selected = NativeCustomRacer_GetDriverSelection(driverIndex);
+			if ((selected < 0) ||
+			    (NativeCustomRacer_GetTemplateCharacterID(selected) != s_nativeCustomRacerVoiceCharacterID))
+			{
+				retailDriverUsesCharacter = 1;
+				continue;
+			}
+
+			if ((racerIndex >= 0) && (racerIndex != selected))
+			{
+				return -1;
+			}
+			racerIndex = selected;
+		}
+
+		if (retailDriverUsesCharacter)
+		{
+			return -1;
 		}
 	}
 	else
