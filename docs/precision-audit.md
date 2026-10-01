@@ -89,6 +89,17 @@ and ghost layouts are unchanged.
 external writes, speed/direction round trips, gravity, friction, acceleration,
 jumps, all 16 mode combinations, checkpoint restoration, original AI wrapping,
 fractional AI arithmetic, normal/drift steering, fractional terrain rotation,
-and face, edge, vertex, tangent, fast and degenerate collision cases. Smoothed
+face, edge, vertex, tangent, fast and degenerate collision cases, wall crash
+stops, and fractional kart bounce. Higher framerate checks cover displacement,
+gravity, AI acceleration/damping and steering scale at 30, 60, 90, 120, 144 and
+240 FPS, including forced 30 FPS and ghost overrides. Smoothed
 changes handling; sustained race testing should cover ramps, drifts, walls,
 weapons and split screen.
+
+The Enhancements submenu was checked in a running native build on an isolated
+virtual display, including its six rows, independent saved toggles and return
+to Options. The main checkout's higher framerate changes are integrated with
+the continuous solvers. High-rate movement uses fractional elapsed time rather
+than alternating integer millisecond steps; fixed-rate AI impulses and damping
+and steering interpolation scale with the selected simulation rate. Discrete
+state timers keep the shared integer clock.
