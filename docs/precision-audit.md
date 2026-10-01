@@ -16,7 +16,7 @@ selected.
 | Projection and clipping (`platform/native_gte_core.c`) | PGXP already preserved projection fractions but used rounded matrix coefficients and translations. | Use validated precise transforms for RTPS/RTPT and MVMVA, including clipping transformations. Preserve the existing saturation and overflow rules. |
 | Model rendering (`RenderBucket_QueueExecute.c`) | Camera-relative translation and view/model matrix composition round before model vertices are projected. | Preserve precise translation and compose the ordinary model MVP in double precision. Retain the integer model scale and depth decisions. |
 | Track, stars and weather rendering | Several paths write GTE registers directly and bypass standard matrix-loading macros. | Bind precise transforms after the corresponding direct camera matrix loads. |
-| Physics (`game/Vehicle/VehPhysForce.c`, `VehPhysGeneral.c`, `VehPhysProc.c`, `VehPhysCrash.c`) | Integer velocity/acceleration, fixed point integration, integer square roots, rotation through s16 GTE inputs, and conversion of positions to whole units for collision searches. | Audited; physics calculations remain as they were. |
+| Physics (`game/Vehicle/VehPhysForce.c`, `VehPhysGeneral.c`, `VehPhysProc.c`, `VehPhysCrash.c`) | Integer velocity/acceleration, fixed point integration, integer square roots, rotation through s16 GTE inputs, and conversion of positions to whole units for collision searches. | Original mode retains these calculations. The optional Smoothed mode uses double precision for player acceleration, jump impulses, gravity, friction, speed/vector conversion and integration, with fixed point exports at collision and gameplay boundaries. |
 
 Transform shadows are keyed by matrix address, checked against their integer
 contents, and expire at frame boundaries. Direct control-register writes clear
@@ -32,7 +32,7 @@ engine to floating point. Camera mode state, zoom/height smoothing, collision
 constraints, authored fly-in/path samples, axis-angle camera smoothing, model
 animation/scale decoding, and special split/reflection model matrix construction
 still contain integer calculations. Their integer outputs can still limit
-smoothness before the new projection path receives them. Physics and binary
+smoothness before the new projection path receives them. Original physics and binary
 structure layouts retain their original behavior. PGXP Off uses the existing
 integer rendering path; Vita currently has PGXP disabled and keeps its existing
 renderer.
@@ -46,5 +46,49 @@ depth, fractional rotation in rotation/light banks, invalidation after direct
 register writes, changed matrix contents, frame expiry, PGXP Off, and the IR
 vector lookup. Assertions are enabled even in Release builds.
 
-A gameplay visual check still requires the user's disc asset (`assets/ctr-u.bin`),
-which was absent from this checkout during the audit.
+The native tests run without a disc image. Gameplay checks require extracted
+disc assets.
+
+## Optional smoothing modes
+
+On PC and Web, Options > Enhancements groups PGXP, detail level, and four
+independent Original / Smoothed settings. Original is the default for all four.
+The native configuration saves `smoothed_physics`, `smoothed_ai`,
+`smoothed_collisions`, and `smoothed_steering` separately. Internal desktop builds
+can toggle player physics on Delete release, like the existing Home and Insert
+shortcuts. PGXP remains an independent rendering setting; Vita keeps Original.
+
+Continuous state uses double precision shadows outside the PS1 structures:
+
+- Player physics evaluates acceleration, jump impulses, gravity, local-space
+  friction, trigonometric speed conversion and movement integration without
+  integer truncation.
+- AI retains fractional navigation progress, path interpolation, speed,
+  acceleration, airborne motion and rotation. Path selection, timers, flags and
+  authored path samples retain their original representations.
+- Collisions use floating-point swept sphere / triangle face, edge and vertex
+  tests, ray intersection, contact fractions, normals, wall response and kart
+  separation / weighted bounce. The integer BSP is a conservative broad phase;
+  authored track geometry and exported contact metadata keep their binary layout.
+- Steering evaluates normal and drift controls, spin rate, turn and wobble
+  interpolation, yaw and terrain rotation in floating point. Input buttons and
+  kart state transitions remain discrete.
+
+External writes replace affected shadow fields. Teleports, driver creation,
+arena resets and mode changes discard continuous state. Mixed configurations
+are supported: each option selects its own solver; shared movement and velocity
+exports preserve fractional results from the selected domains. Original modes
+retain the legacy arithmetic at their respective entry points.
+
+Native checkpoint bundles capture all four settings and continuous state. The
+native state bundle is version 3; quick saves and development replay checkpoints
+from older builds have a different format and are rejected. Ordinary game saves
+and ghost layouts are unchanged.
+
+`ctr_native_physics` checks fractional and negative movement at 30/60 FPS,
+external writes, speed/direction round trips, gravity, friction, acceleration,
+jumps, all 16 mode combinations, checkpoint restoration, original AI wrapping,
+fractional AI arithmetic, normal/drift steering, fractional terrain rotation,
+and face, edge, vertex, tangent, fast and degenerate collision cases. Smoothed
+changes handling; sustained race testing should cover ramps, drifts, walls,
+weapons and split screen.
