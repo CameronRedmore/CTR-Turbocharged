@@ -25,6 +25,12 @@ values. The audit also found an out-of-bounds PGXP input lookup for MVMVA's IR
 vector (vector index 3); it now falls back safely. Frame changes also clear old
 PGXP register/input results.
 
+Model camera-relative translations preserve the GTE's signed 16-bit input
+wrapping and IR saturation before near-instance and DRAW_HUGE scaling. Portal
+reward animation can retain high bits from unsigned trigonometric shifts in its
+32-bit positions; ignoring that wrapping sent precise reward geometry outside
+the portal. Fractional camera residuals are applied after the integer input wraps.
+
 ## Scope and remaining integer calculations
 
 This is a native visual precision improvement, not a complete conversion of the
@@ -44,10 +50,20 @@ Build with the existing CMake configuration and run `ctest --test-dir build
 order, fractional-angle orthonormality, fractional translation and projection
 depth, fractional rotation in rotation/light banks, invalidation after direct
 register writes, changed matrix contents, frame expiry, PGXP Off, and the IR
-vector lookup. Assertions are enabled even in Release builds.
+vector lookup. It also checks portal reward positions with unsigned animation
+offsets through projection, camera-relative wrapping across signed boundaries,
+and model translation saturation. Assertions are enabled even in Release builds.
 
 The native tests run without a disc image. Gameplay checks require extracted
 disc assets.
+
+For development builds (`CTR_INTERNAL`), launch with
+`CTR_PGXP_RETAIL_TRANSFORMS=1` to bypass the precise rotation and translation
+shadows while retaining PGXP subpixel projection and the selected texture
+mapping mode. This diagnostic is read on the first transform and logs when active.
+Compare the same scene with and without the variable to isolate transform
+shadows from the rest of PGXP. Options > Enhancements > Integer NCLIP controls
+the winding calculation independently; End toggles it in development builds.
 
 ## Optional smoothing modes
 
