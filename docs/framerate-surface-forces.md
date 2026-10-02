@@ -84,3 +84,20 @@ that every hazard, timer or geometric contact is frame-rate independent.
 These checks establish the frame-rate scaling bug and its correction. The
 specific reported Sewer Speedway ramp has not been reproduced in a live race;
 additional track geometry or collision issues may still affect that location.
+
+## Smoothed collision hit position
+
+Surface recovery compares the driver's position after movement with the
+exported hit position. Retail exports the triangle point nearest the requested
+end of the sweep. Smoothed collisions exported the contact point instead. A
+kart resting on an uphill road touches it at the start of each step, so the
+whole step read as penetration along the direction of travel. Recovery then
+added about a quarter of the kart's speed per 30 FPS frame until the speed cap,
+and launched it over crests. Larger steps made it worse at lower frame rates.
+
+Smoothed collisions now export the triangle point nearest the sweep end, and
+the push-out position on the face plane, as retail does. A traced drive over the
+reported hills at 30 FPS previously reached a speed of 31,844 (Original: 16,627).
+After the fix, it peaked at 17,441 at 30 FPS and 17,065 at 60 FPS, with no
+per-frame speed jumps. `ctr_native_physics` reproduces the traced slope contact
+at every supported rate and checks that recovery leaves only integer rounding.
