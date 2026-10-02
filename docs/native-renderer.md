@@ -79,4 +79,18 @@ every anti-aliasing and PGXP mode, plus 15-bit quantisation.
 
 Internal builds: Page Down toggles the renderer and Scroll Lock freezes game
 logic while rendering continues, so both renderers can be compared on the
-same frame.
+same frame. End toggles the depth buffer and F6 shows the debug overlay
+(merged from fix-fireball-flash).
+
+In the Adventure hub with logic frozen, Classic against Classic differs by
+0 pixels and Native against Classic by under 1%, all of it the missing mosaic
+textures on near surfaces.
+
+## Status (2026-10-02)
+
+- Phase 1 (native layer pipeline, look options, tests) is complete.
+- Phase 2 (level geometry) works in game. Mosaic textures and the LOD morph
+  are next.
+- fix-fireball-flash (frame-rate-correct particles, F6 overlay) is merged
+  into this branch. The overlay does not yet list the Renderer or Colour
+  depth options.
