@@ -100,7 +100,33 @@ blasted-camera lerp, and the `InterpBySpeed` speeds in `VehStuckProc.c`,
 (`FPS_HALF(gGT->timer) & 1`, texture/water animation, table indices) and for
 rate or threshold values that are not accumulated per frame.
 
-## Not changed
+## Particles
 
-- `RB_FlameJet.c` and other emitters may spawn particles once per rendered frame.
-  This affects particle density rather than animation speed, and was not audited.
+- Rescale: `Particle_RescaleNewParticles` (called from `MainFrame.c`) scales each new particle's
+  velocities, accelerations and lifespan once, after thread ticks, for both the
+  ordinary and heat-warp lists. `PARTICLE_SET_COLOR_FLAG_NATIVE_FRAME_RATE_SCALED`
+  marks done particles and `Particle_Init` clears it, since pool slots are reused
+  without clearing. Special-line particles skip the last axis, whose
+  velocity/accel hold the packed line colour.
+- Acceleration: the rescaled accel is still a per-30-FPS-frame velocity change,
+  so `Particle_UpdateList` spreads it with `CTR_FRAME_STEP` (an `accel / k` per
+  frame made exhaust fall k times too fast). The rescale also offsets the start
+  velocity by `-accel * (k - 1) / (2k²)` so positions follow retail's discrete
+  path at each 30 FPS frame, where k = rate / 30.
+- Particle callbacks work in retail units through helpers in `Particle.c`
+  (`Particle_GetRetailVelocity`, `Particle_SetRetailVelocity`,
+  `Particle_FrameStep`, `Particle_FrameCount`): potion shatter's Y-speed
+  threshold, random velocities and colour fade; spit tire bounce velocities and
+  shrink; underwater exhaust's pop threshold, with the pop shown for one 30 FPS
+  frame and the callback cleared so it pops once.
+- Emission rate: `Particle_Init` only spawns on the first rendered frame of each
+  30 FPS frame (`CTR_RETAIL_FRAME_START`), so emitters called every rendered frame
+  emit at the retail rate.
+- `PARTICLE_SPAWN_UNGATED_BEGIN/END` bypass that gate for one-shot bursts (potion
+  shatter, orca splash, mask hint leave/vanish, mask grab, landing sparks, mud
+  landing splash, wake entry burst) and for callers that pace themselves to 30 FPS
+  frames (warp-pad dust, which runs on `CTR_RETAIL_FRAME_TICK` frames). Older call
+  sites set `sdata->UnusedPadding1` directly for the same effect.
+- Emitter timer phases use `CTR_RETAIL_FRAME_INDEX(gGT->timer)` rather than the
+  rendered-frame timer: exhaust driver interleave, terrain odd/even emitters,
+  flame-jet rotation flip and warp-pad dust.
