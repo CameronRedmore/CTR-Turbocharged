@@ -40,6 +40,14 @@ Cutscenes (overlay 233) skip the scaled path entirely and advance by elapsed tim
 - `VehFrame.c`: half-rate driver anims step at 30 Hz. Their baked matrix index is
   `animFrame`, not `FPS_HALF(animFrame)`, which matches the mask-grab code in
   `VehStuckProc.c`.
+- `VehPhysProc.c` `VehPhysProc_SlamWall_Animate`: the wall-crash fall anim is half-rate,
+  so `animFrame` now steps on `CTR_RETAIL_FRAME_TICK` (it was stepping every
+  rendered frame, so the crash ended far too early above 30 FPS).
+- `VehPhysForce.c` `VehPhysForce_TranslateMatrix`:
+  - Wheelie start/recover and landing-squish recover stepped `matrixIndex` once per
+    rendered frame; they now step on `CTR_RETAIL_FRAME_TICK`.
+  - Jump squash/stretch decay and height smoothing run on the retail tick, and the
+    kart scale interpolation speed uses `CTR_FRAME_STEP`.
 - `VehTalkMask.c`: mouth frames are converted from 30 FPS units into `animFrame` units.
 - `RB_Orca.c`:
   - The cooldown counts down at 30 Hz.
@@ -67,11 +75,30 @@ Cutscenes (overlay 233) skip the scaled path entirely and advance by elapsed tim
 - `MM_Battle.c`: error colour flash uses `FPS_HALF(frameCounter)`.
 - `MainFreeze.c`: pause blink and the analog config wobble use `FPS_HALF`.
 
+- `UI_RenderFrame.c`: the turbo-count slide in/out steps on the retail tick.
+- `222.c`: C-T-R letter fly-in/out and time-display fly-out frame counts are scaled,
+  and the "press to continue" delay is scaled.
+- `MainFrame.c`, `UI_VsQuip.c`: the VS end-of-race timer and its thresholds are scaled.
+
 ### Minor
 
 - `Display.c`: blur wave phase.
 - `RB_FlameJet.c`: particle wobble phase.
 - `MainInit.c`: initial water animation call.
+
+## Step functions
+
+`FPS_HALF(step)` truncates, so a per-frame step such as `FPS_HALF(0x40)` was 13
+instead of 13.33 at 144 FPS (and could round to 0 for small steps). Per-frame
+accumulating steps now use `CTR_FRAME_STEP(step, timer)`, which spreads the 30 Hz
+step exactly across rendered frames: object/hub/UI spins and scale steps, the
+blasted-camera lerp, and the `InterpBySpeed` speeds in `VehStuckProc.c`,
+`VehPhysProc.c` and `VehPhysGeneral.c`. Where a frame count multiplies a step
+(`AH_Pause.c`, `AH_MaskHint.c`), `FPS_HALF` wraps the whole product.
+
+`FPS_HALF` remains for converting a frame counter into a 30 FPS phase
+(`FPS_HALF(gGT->timer) & 1`, texture/water animation, table indices) and for
+rate or threshold values that are not accumulated per frame.
 
 ## Not changed
 

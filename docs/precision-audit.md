@@ -68,7 +68,7 @@ the winding calculation independently; End toggles it in development builds.
 ## Optional smoothing modes
 
 On PC and Web, Options > Enhancements groups PGXP, detail level, and four
-independent Original / Smoothed settings. Original is the default for all four.
+independent Original / Smoothed settings. Original is the default for player physics, AI and steering; collisions default to Smoothed.
 The native configuration saves `smoothed_physics`, `smoothed_ai`,
 `smoothed_collisions`, and `smoothed_steering` separately. Internal desktop builds
 can toggle player physics on Delete release, like the existing Home and Insert
