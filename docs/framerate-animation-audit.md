@@ -109,16 +109,20 @@ rate or threshold values that are not accumulated per frame.
   without clearing. Special-line particles skip the last axis, whose
   velocity/accel hold the packed line colour.
 - Acceleration: the rescaled accel is still a per-30-FPS-frame velocity change,
-  so `Particle_UpdateList` spreads it with `CTR_FRAME_STEP` (an `accel / k` per
-  frame made exhaust fall k times too fast). The rescale also offsets the start
+  so `Particle_UpdateList` spreads it with `Particle_FrameStep` (an `accel / k`
+  per frame made exhaust fall k times too fast). Each particle's own 30 FPS
+  frames are counted from `framesLeftInLife`, not the global timer, because
+  bursts spawn mid-frame; `Particle_IsRetailFrameEnd` marks the update that
+  completes one. The rescale also offsets the start
   velocity by `-accel * (k - 1) / (2k²)` so positions follow retail's discrete
   path at each 30 FPS frame, where k = rate / 30.
 - Particle callbacks work in retail units through helpers in `Particle.c`
   (`Particle_GetRetailVelocity`, `Particle_SetRetailVelocity`,
   `Particle_FrameStep`, `Particle_FrameCount`): potion shatter's Y-speed
-  threshold, random velocities and colour fade; spit tire bounce velocities and
-  shrink; underwater exhaust's pop threshold, with the pop shown for one 30 FPS
-  frame and the callback cleared so it pops once.
+  threshold (checked only at the particle's 30 FPS frame ends, as retail does),
+  random velocities and colour fade; spit tire bounce velocities and shrink;
+  underwater exhaust's pop threshold, with the pop shown, frozen in place, for
+  one 30 FPS frame and the callback cleared so it pops once.
 - Emission rate: `Particle_Init` only spawns on the first rendered frame of each
   30 FPS frame (`CTR_RETAIL_FRAME_START`), so emitters called every rendered frame
   emit at the retail rate.
