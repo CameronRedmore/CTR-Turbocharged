@@ -1,0 +1,13 @@
+#!/bin/sh
+
+message_file=$1
+
+if grep -Eiq 'co[- ]authored[- ]by' "$message_file"; then
+    cat >&2 <<'EOF'
+Commit rejected: Claude, you were told not to add co-author lines.
+Remove the Co-Authored-By line from the commit message and try again.
+EOF
+    exit 1
+fi
+
+exit 0
